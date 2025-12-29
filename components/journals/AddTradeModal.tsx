@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import type { TradeOutcome, TradePartial } from '@/lib/store'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import type { TradeOutcome, TradePartial, Trade } from '@/lib/api/trades'
+import { computeTrade } from '@/lib/tradeMath'
 
 interface AddTradeModalProps {
   isOpen: boolean
@@ -13,16 +14,23 @@ interface AddTradeModalProps {
     mainRR: number | null
     partials: TradePartial[]
   }) => void
+  mode?: 'add' | 'edit'
+  initialTrade?: Trade
+  currency?: string
 }
 
 /**
- * Modal for adding a new trade
+ * Modal for adding or editing a trade
  * Trading-realistic entry with risk amount, outcome, RR, and partials
+ * Supports live preview of computed metrics
  */
 export default function AddTradeModal({
   isOpen,
   onClose,
   onSubmit,
+  mode = 'add',
+  initialTrade,
+  currency = 'USD',
 }: AddTradeModalProps) {
   const [formData, setFormData] = useState({
     tradeDate: new Date().toISOString().split('T')[0],
@@ -40,6 +48,38 @@ export default function AddTradeModal({
   }>({})
 
   const modalRef = useRef<HTMLDivElement>(null)
+
+  // Initialize form from initialTrade when editing
+  useEffect(() => {
+    if (isOpen) {
+      if (mode === 'edit' && initialTrade) {
+        setFormData({
+          tradeDate: new Date(initialTrade.tradeDate).toISOString().split('T')[0],
+          outcome: initialTrade.outcome,
+          riskAmount: initialTrade.riskAmount.toString(),
+          mainRR: initialTrade.mainRR?.toString() || '',
+        })
+        setPartials(
+          initialTrade.partials.map((p) => ({
+            positionPercent: (p.sizeFraction * 100).toString(),
+            rr: p.rr.toString(),
+          }))
+        )
+        setShowPartials(initialTrade.partials.length > 0)
+      } else {
+        // Reset for add mode
+        setFormData({
+          tradeDate: new Date().toISOString().split('T')[0],
+          outcome: 'WIN',
+          riskAmount: '',
+          mainRR: '',
+        })
+        setPartials([])
+        setShowPartials(false)
+      }
+      setErrors({})
+    }
+  }, [isOpen, mode, initialTrade])
 
   // Handle ESC key
   useEffect(() => {
@@ -74,21 +114,6 @@ export default function AddTradeModal({
     }
     return () => {
       document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
-  // Reset form when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        tradeDate: new Date().toISOString().split('T')[0],
-        outcome: 'WIN',
-        riskAmount: '',
-        mainRR: '',
-      })
-      setPartials([])
-      setShowPartials(false)
-      setErrors({})
     }
   }, [isOpen])
 
@@ -140,6 +165,45 @@ export default function AddTradeModal({
     }
   }
 
+  // Live preview computation
+  const previewMetrics = useMemo(() => {
+    const risk = parseFloat(formData.riskAmount)
+    if (isNaN(risk) || risk <= 0) return null
+
+    const partialsData: TradePartial[] = partials
+      .filter((p) => p.positionPercent.trim() && p.rr.trim())
+      .map((p) => ({
+        sizeFraction: parseFloat(p.positionPercent) / 100,
+        rr: parseFloat(p.rr),
+      }))
+
+    const totalPercent = partials.reduce(
+      (sum, p) => sum + (parseFloat(p.positionPercent) || 0),
+      0
+    )
+    const totalFraction = totalPercent / 100
+    const mainRRValue =
+      totalFraction < 1.0 && formData.mainRR.trim()
+        ? parseFloat(formData.mainRR)
+        : totalFraction === 1.0
+        ? null
+        : formData.mainRR.trim()
+        ? parseFloat(formData.mainRR)
+        : null
+
+    try {
+      const metrics = computeTrade({
+        outcome: formData.outcome,
+        riskAmount: risk,
+        mainRR: mainRRValue,
+        partials: partialsData,
+      })
+      return metrics
+    } catch (e) {
+      return null
+    }
+  }, [formData, partials])
+
   const validate = (): boolean => {
     const newErrors: typeof errors = {}
 
@@ -189,7 +253,7 @@ export default function AddTradeModal({
           newErrors.partials = `Partial ${i + 1}: Position % is required`
           break
         }
-        if (percent < 1 || percent > 100) {
+        if (percent <= 0 || percent > 100) {
           newErrors.partials = `Partial ${i + 1}: Position % must be between 1 and 100`
           break
         }
@@ -233,7 +297,7 @@ export default function AddTradeModal({
           const rr = parseFloat(p.rr)
           if (
             isNaN(percent) ||
-            percent < 1 ||
+            percent <= 0 ||
             percent > 100 ||
             isNaN(rr) ||
             rr <= 0
@@ -277,14 +341,23 @@ export default function AddTradeModal({
         ? null
         : parseFloat(formData.mainRR)
 
-    onSubmit({
+    const tradeData = {
       tradeDate: new Date(formData.tradeDate),
       outcome: formData.outcome,
       riskAmount: parseFloat(formData.riskAmount),
       mainRR: mainRRValue,
       partials: partialsData,
-    })
+    }
 
+    // Debug log
+    if (process.env.NODE_ENV === 'development') {
+      console.log('AddTradeModal onSubmit', { mode, tradeData })
+    }
+
+    // Call onSubmit (this should call addTrade/updateTrade)
+    onSubmit(tradeData)
+
+    // Close modal after submit
     onClose()
   }
 
@@ -304,6 +377,15 @@ export default function AddTradeModal({
   const showMainRR =
     formData.outcome === 'WIN' && (partials.length === 0 || totalFraction < 1.0)
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
+  }
+
   if (!isOpen) return null
 
   return (
@@ -318,19 +400,42 @@ export default function AddTradeModal({
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-700 sticky top-0 bg-gray-800">
-          <h2 className="text-xl font-semibold text-white">Add Trade</h2>
+          <h2 className="text-xl font-semibold text-white">
+            {mode === 'edit' ? 'Edit Trade' : 'Add Trade'}
+          </h2>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-4">
           <div className="space-y-6">
+            {/* Live Preview */}
+            {previewMetrics && (
+              <div className="bg-gray-700/50 rounded-md p-3 border border-gray-600">
+                <div className="text-xs text-gray-400 mb-1">Computed:</div>
+                <div
+                  className={`text-lg font-semibold ${
+                    previewMetrics.profitLoss > 0
+                      ? 'text-green-400'
+                      : previewMetrics.profitLoss < 0
+                      ? 'text-red-400'
+                      : 'text-gray-400'
+                  }`}
+                >
+                  {previewMetrics.profitLoss >= 0 ? '+' : ''}
+                  {formatCurrency(previewMetrics.profitLoss)} (
+                  {previewMetrics.rMultiple >= 0 ? '+' : ''}
+                  {previewMetrics.rMultiple.toFixed(2)}R)
+                </div>
+              </div>
+            )}
+
             {/* Date */}
             <div>
               <label
                 htmlFor="tradeDate"
                 className="block text-sm font-medium text-gray-300 mb-1"
               >
-                Date
+                Date <span className="text-red-400">*</span>
               </label>
               <input
                 type="date"
@@ -515,12 +620,14 @@ export default function AddTradeModal({
 
                       {partials.length > 0 && (
                         <div className="text-xs text-gray-500 pt-2 border-t border-gray-700">
-                          Total: {totalPercent.toFixed(0)}% / 100%
-                          {totalPercent < 100 && (
-                            <span className="text-gray-400">
-                              {' '}
-                              (Remaining: {remainingPercent.toFixed(0)}% uses main RR)
-                            </span>
+                          <div className="mb-1">
+                            Partials: {totalPercent.toFixed(0)}% used,{' '}
+                            {remainingPercent.toFixed(0)}% remaining
+                          </div>
+                          {remainingPercent > 0 && (
+                            <div className="text-gray-400 italic">
+                              Remaining {remainingPercent.toFixed(0)}% will use Main RR
+                            </div>
                           )}
                         </div>
                       )}
@@ -559,7 +666,7 @@ export default function AddTradeModal({
               disabled={!isFormValid()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save
+              {mode === 'edit' ? 'Save Changes' : 'Save'}
             </button>
           </div>
         </form>

@@ -36,9 +36,22 @@ export function useJournal(journalId: string): Journal | undefined {
 export function useTrades(journalId: string): Trade[] {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot)
   
-  return useMemo(() => {
-    return snapshot.trades
+  const result = useMemo(() => {
+    const filtered = snapshot.trades
       .filter((t) => t.journalId === journalId)
       .sort((a, b) => b.tradeDate.getTime() - a.tradeDate.getTime())
+    
+    // Debug log
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useTrades', journalId, {
+        totalTradesInStore: snapshot.trades.length,
+        journalTrades: filtered.length,
+        tradeIds: filtered.map((t) => t.id),
+      })
+    }
+    
+    return filtered
   }, [snapshot.trades, journalId])
+  
+  return result
 }

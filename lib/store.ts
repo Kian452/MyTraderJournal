@@ -9,6 +9,7 @@
  */
 
 import { Journal, Currency } from './mockJournals'
+import { computeTrade } from './tradeMath'
 
 export type TradeOutcome = 'WIN' | 'LOSS' | 'BE'
 
@@ -217,64 +218,6 @@ function updateJournalCapital(journalId: string): void {
   emitChange()
 }
 
-// Compute profitLoss and rMultiple based on outcome, risk, RR, and partials
-function computeTradeMetrics(
-  outcome: TradeOutcome,
-  riskAmount: number,
-  mainRR: number | null,
-  partials: TradePartial[]
-): { profitLoss: number; rMultiple: number } {
-  if (outcome === 'LOSS') {
-    return {
-      profitLoss: -riskAmount,
-      rMultiple: -1,
-    }
-  }
-
-  if (outcome === 'BE') {
-    return {
-      profitLoss: 0,
-      rMultiple: 0,
-    }
-  }
-
-  // WIN outcome
-  if (partials.length === 0) {
-    // No partials: simple calculation
-    if (!mainRR) {
-      throw new Error('mainRR is required for WIN outcome without partials')
-    }
-    const profitLoss = riskAmount * mainRR
-    return {
-      profitLoss,
-      rMultiple: mainRR,
-    }
-  }
-
-  // With partials
-  const totalFraction = partials.reduce((sum, p) => sum + p.sizeFraction, 0)
-  const remaining = Math.max(0, 1 - totalFraction)
-
-  // Calculate profit from partials
-  const partialProfit = partials.reduce(
-    (sum, p) => sum + riskAmount * p.sizeFraction * p.rr,
-    0
-  )
-
-  // Calculate profit from remaining (if any)
-  const remainingProfit = remaining > 0 && mainRR
-    ? riskAmount * remaining * mainRR
-    : 0
-
-  const profitLoss = partialProfit + remainingProfit
-  const rMultiple = profitLoss / riskAmount
-
-  return {
-    profitLoss,
-    rMultiple,
-  }
-}
-
 // Trade operations
 export function listTrades(journalId: string): Trade[] {
   return trades
@@ -292,13 +235,18 @@ export function addTrade(
     partials: TradePartial[]
   }
 ): Trade {
+  // Debug log
+  if (process.env.NODE_ENV === 'development') {
+    console.log('addTrade', journalId, data)
+  }
+
   // Compute profitLoss and rMultiple
-  const { profitLoss, rMultiple } = computeTradeMetrics(
-    data.outcome,
-    data.riskAmount,
-    data.mainRR,
-    data.partials
-  )
+  const { profitLoss, rMultiple } = computeTrade({
+    outcome: data.outcome,
+    riskAmount: data.riskAmount,
+    mainRR: data.mainRR,
+    partials: data.partials,
+  })
 
   const newTrade: Trade = {
     id: Date.now().toString(),
@@ -312,9 +260,85 @@ export function addTrade(
     rMultiple,
     createdAt: new Date(),
   }
+  
+  // Add trade to array
   trades.push(newTrade)
+  
+  // Update journal capital (this also persists and emits)
   updateJournalCapital(journalId)
+  
+  // Ensure trades are persisted and change is emitted
+  persist()
+  emitChange()
+  
+  // Debug log
+  if (process.env.NODE_ENV === 'development') {
+    console.log('addTrade completed', {
+      tradeId: newTrade.id,
+      journalId,
+      totalTrades: trades.length,
+      journalTrades: trades.filter((t) => t.journalId === journalId).length,
+    })
+  }
+  
   return newTrade
+}
+
+export function updateTrade(
+  tradeId: string,
+  data: {
+    tradeDate: Date
+    outcome: TradeOutcome
+    riskAmount: number
+    mainRR: number | null
+    partials: TradePartial[]
+  }
+): Trade | null {
+  const tradeIndex = trades.findIndex((t) => t.id === tradeId)
+  if (tradeIndex === -1) return null
+
+  // Compute profitLoss and rMultiple
+  const { profitLoss, rMultiple } = computeTrade({
+    outcome: data.outcome,
+    riskAmount: data.riskAmount,
+    mainRR: data.mainRR,
+    partials: data.partials,
+  })
+
+  const updatedTrade: Trade = {
+    ...trades[tradeIndex],
+    tradeDate: data.tradeDate,
+    outcome: data.outcome,
+    riskAmount: data.riskAmount,
+    mainRR: data.mainRR,
+    partials: data.partials,
+    profitLoss,
+    rMultiple,
+  }
+
+  trades[tradeIndex] = updatedTrade
+  updateJournalCapital(updatedTrade.journalId)
+  
+  // Ensure trades are persisted and change is emitted
+  persist()
+  emitChange()
+  
+  return updatedTrade
+}
+
+export function deleteTrade(tradeId: string): boolean {
+  const trade = trades.find((t) => t.id === tradeId)
+  if (!trade) return false
+
+  const journalId = trade.journalId
+  trades = trades.filter((t) => t.id !== tradeId)
+  updateJournalCapital(journalId)
+  
+  // Ensure trades are persisted and change is emitted
+  persist()
+  emitChange()
+  
+  return true
 }
 
 // Get current snapshot (for useSyncExternalStore)
@@ -325,10 +349,11 @@ export function getSnapshot() {
     return cachedSnapshot
   }
   
-  // Create new snapshot only when data changes
+  // Create new snapshot with new array references when data changes
+  // This ensures React detects changes even if array contents are mutated
   cachedSnapshot = {
-    journals,
-    trades,
+    journals: [...journals], // Create new array reference
+    trades: [...trades],     // Create new array reference
   }
   
   return cachedSnapshot

@@ -1,4 +1,15 @@
-import { Trade } from '@/lib/store'
+'use client'
+
+import { useMemo } from 'react'
+import type { Trade } from '@/lib/api/trades'
+import {
+  computeEquityByDay,
+  computeOutcomeCounts,
+} from '@/lib/analytics'
+import StatCards from './data/StatCards'
+import EquityCurve from './data/EquityCurve'
+import OutcomeDonut from './data/OutcomeDonut'
+import PnLCalendar from './data/PnLCalendar'
 
 interface JournalStatsProps {
   trades: Trade[]
@@ -9,7 +20,7 @@ interface JournalStatsProps {
 
 /**
  * Journal statistics component
- * Displays computed stats from trades using new trade model
+ * Displays analytics, charts, and calendar view
  */
 export default function JournalStats({
   trades,
@@ -17,90 +28,51 @@ export default function JournalStats({
   currentCapital,
   currency,
 }: JournalStatsProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  // Compute analytics data (memoized for performance)
+  const equityData = useMemo(
+    () => computeEquityByDay(trades, startingCapital),
+    [trades, startingCapital]
+  )
 
-  // Calculate stats using new trade model
-  const tradesCount = trades.length
-  const totalPL = trades.reduce((sum, t) => sum + t.profitLoss, 0)
-  
-  // Winrate: wins / total trades (LOSS and BE are non-wins)
-  const wins = trades.filter((t) => t.outcome === 'WIN' && t.profitLoss > 0).length
-  const winrate = tradesCount > 0 ? (wins / tradesCount) * 100 : 0
-  
-  // Average R: average of rMultiple across all trades
-  const avgR =
-    tradesCount > 0
-      ? trades.reduce((sum, t) => sum + t.rMultiple, 0) / tradesCount
-      : 0
+  const outcomeCounts = useMemo(
+    () => computeOutcomeCounts(trades),
+    [trades]
+  )
 
-  const stats = [
-    {
-      label: 'Trades',
-      value: tradesCount.toString(),
-    },
-    {
-      label: 'Total P/L',
-      value: formatCurrency(totalPL),
-      valueColor: totalPL >= 0 ? 'text-green-400' : 'text-red-400',
-    },
-    {
-      label: 'Winrate',
-      value: `${winrate.toFixed(1)}%`,
-    },
-    {
-      label: 'Avg R',
-      value: avgR >= 0 ? `+${avgR.toFixed(2)}R` : `${avgR.toFixed(2)}R`,
-    },
-    {
-      label: 'Current Capital',
-      value: formatCurrency(currentCapital),
-    },
-  ]
+  const totalPL = useMemo(
+    () => trades.reduce((sum, t) => sum + t.profitLoss, 0),
+    [trades]
+  )
 
   return (
-    <div>
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-gray-800/50 border border-gray-700 rounded-lg p-4"
-          >
-            <div className="text-sm text-gray-400 mb-1">{stat.label}</div>
-            <div
-              className={`text-lg font-semibold text-white ${
-                stat.valueColor || ''
-              }`}
-            >
-              {stat.value}
-            </div>
-          </div>
-        ))}
+    <div className="space-y-8">
+      {/* Stat Cards */}
+      <StatCards
+        trades={trades}
+        totalPL={totalPL}
+        currentCapital={currentCapital}
+        currency={currency}
+      />
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Equity Curve */}
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Equity Curve</h3>
+          <EquityCurve data={equityData} currency={currency} />
+        </div>
+
+        {/* Outcome Donut */}
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Wins vs Losses vs BE</h3>
+          <OutcomeDonut data={outcomeCounts} />
+        </div>
       </div>
 
-      {/* Placeholder Charts */}
-      <div className="space-y-6">
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-2">Equity Curve</h3>
-          <p className="text-gray-400 text-sm">Coming soon</p>
-        </div>
-
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-2">Calendar P/L</h3>
-          <p className="text-gray-400 text-sm">Coming soon</p>
-        </div>
-
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-2">Wins vs Losses</h3>
-          <p className="text-gray-400 text-sm">Coming soon</p>
-        </div>
+      {/* Calendar P/L */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Calendar P/L</h3>
+        <PnLCalendar trades={trades} currency={currency} />
       </div>
     </div>
   )

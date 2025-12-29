@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import type { Currency } from '@/lib/api/journals'
 
 interface CreateJournalModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: { name: string; startingCapital: number; currency: Currency }) => void
 }
-
-type Currency = 'USD' | 'EUR'
 
 interface JournalFormData {
   name: string

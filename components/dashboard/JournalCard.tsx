@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Journal } from '@/lib/mockJournals'
+import type { Journal } from '@/lib/api/journals'
 
 interface JournalCardProps {
   journal: Journal
@@ -104,7 +104,7 @@ export default function JournalCard({ journal, onDelete }: JournalCardProps) {
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-400">Last Updated</span>
           <span className="text-sm text-gray-300">
-            {formatDate(journal.lastUpdated)}
+            {formatDate(journal.updatedAt)}
           </span>
         </div>
       </div>

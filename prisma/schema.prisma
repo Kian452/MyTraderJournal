@@ -42,6 +42,9 @@ model Journal {
   name           String
   startingCapital Float    @map("starting_capital") // Initial capital when journal was created
   currentCapital  Float    @map("current_capital")  // Updated after each trade
+  tradesCount    Int       @default(0) @map("trades_count") // Number of trades in this journal
+  currency       String    @default("USD") // Currency code (USD, EUR, etc.)
+  updatedAt      DateTime  @updatedAt @map("updated_at") // Automatically updated on changes
   createdAt      DateTime  @default(now()) @map("created_at")
 
   // Relations
@@ -58,29 +61,61 @@ model Journal {
 // TRADE MODEL
 // ============================================================================
 // Individual trades within a journal
-// Stores P&L, risk/reward ratio, and win/loss status
+// Stores trade inputs, computed metrics, and win/loss status
 // Optimized for analytics queries (equity curve, winrate, R/R analysis)
 
+enum TradeOutcome {
+  WIN
+  LOSS
+  BE
+}
+
 model Trade {
-  id          String    @id @default(uuid())
-  journalId   String    @map("journal_id")
-  profitLoss  Float     @map("profit_loss") // Can be positive (profit) or negative (loss)
-  riskReward  Float?    @map("risk_reward")  // Risk/Reward ratio (nullable for flexibility)
-  isWin       Boolean   @map("is_win")       // Derived from profitLoss > 0, stored for fast analytics
-  tradeDate   DateTime  @default(now()) @map("trade_date") // Date of the trade (can be historical)
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id          String        @id @default(uuid())
+  journalId   String        @map("journal_id")
+  tradeDate   DateTime      @map("trade_date") // Date of the trade (can be historical)
+  outcome     TradeOutcome  // WIN, LOSS, or BE
+  riskAmount  Float         @map("risk_amount") // Amount risked on this trade
+  mainRR      Float?        @map("main_rr") // Main risk-reward ratio (nullable if partials sum to 100%)
+  profitLoss  Float         @map("profit_loss") // Computed: profit or loss amount
+  rMultiple   Float         @map("r_multiple") // Computed: profitLoss / riskAmount
+  isWin       Boolean       @map("is_win") // Computed: derived from profitLoss > 0
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  journal     Journal   @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journal     Journal       @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  partials    TradePartial[]
   attributeValues TradeAttributeValue[]
 
   @@map("trades")
   @@index([journalId])
   @@index([journalId, tradeDate])
+  @@index([journalId, outcome])
   @@index([journalId, isWin])
   @@index([journalId, createdAt])
   // Composite index for common analytics queries (equity curve, calendar P&L)
   @@index([journalId, tradeDate, profitLoss])
+}
+
+// ============================================================================
+// TRADE PARTIAL MODEL
+// ============================================================================
+// Stores partial exit information for trades
+// Each partial represents a percentage of the position closed at a specific RR
+
+model TradePartial {
+  id          String    @id @default(uuid())
+  tradeId     String    @map("trade_id")
+  percentage  Float     // Position percentage (0-100)
+  rr          Float     // Risk-reward ratio for this partial (> 0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  trade       Trade     @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
+  @@map("trade_partials")
+  @@index([tradeId])
 }
 
 // ============================================================================
