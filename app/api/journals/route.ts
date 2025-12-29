@@ -15,14 +15,32 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const journals = await prisma.journal.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    // Query journals - handle case where Prisma client may be out of sync
+    let journals: any[]
+    try {
+      journals = await prisma.journal.findMany({
+        where: {
+          userId: session.user.id,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })
+    } catch (dbError: any) {
+      // If it's a Prisma error about missing fields, provide helpful message
+      if (dbError?.code === 'P2009' || dbError?.message?.includes('Unknown arg')) {
+        throw new Error(
+          'Database schema mismatch. Please run: npm run db:generate && npm run db:migrate'
+        )
+      }
+      // If it's a connection error
+      if (dbError?.code === 'P1001' || dbError?.message?.includes('connect')) {
+        throw new Error(
+          'Database connection failed. Please check DATABASE_URL and ensure the database is running.'
+        )
+      }
+      throw dbError
+    }
 
     // Transform to match frontend interface
     // Note: TypeScript types may be out of sync until Prisma client is regenerated

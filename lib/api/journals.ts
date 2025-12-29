@@ -38,8 +38,12 @@ export async function fetchJournals(): Promise<Journal[]> {
     if (response.status === 401) {
       throw new Error('Unauthorized: Please log in')
     }
-    const error = await response.json().catch(() => ({ error: 'Failed to fetch journals' }))
-    throw new Error(error.error || 'Failed to fetch journals')
+    const errorData = await response.json().catch(() => ({ error: 'Failed to fetch journals' }))
+    // In development, include error details if available
+    const errorMessage = process.env.NODE_ENV === 'development' && errorData.details
+      ? `${errorData.error}: ${errorData.details}`
+      : errorData.error || 'Failed to fetch journals'
+    throw new Error(errorMessage)
   }
 
   const data = await response.json()
