@@ -1,26 +1,12 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 /**
  * NextAuth configuration
- * 
- * TODO: Replace mock validation with actual database queries
- * TODO: Add password hashing (bcrypt)
- * TODO: Add user registration logic
- * TODO: Add email verification
- * TODO: Add password reset functionality
+ * Uses database for user authentication
  */
-
-// Mock user store (temporary - will be replaced with database)
-// TODO: Remove this when database models are implemented
-const mockUsers = [
-  {
-    id: '1',
-    email: 'demo@example.com',
-    password: 'demo123', // In production, this should be hashed
-    name: 'Demo User',
-  },
-]
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -35,20 +21,32 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Mock validation - replace with database query
-        const user = mockUsers.find(
-          (u) => u.email === credentials.email && u.password === credentials.password
-        )
+        try {
+          // Find user by email
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase().trim() },
+          })
 
-        if (!user) {
+          if (!user) {
+            return null
+          }
+
+          // Verify password
+          const isValid = await bcrypt.compare(credentials.password, user.passwordHash)
+
+          if (!isValid) {
+            return null
+          }
+
+          // Return user object (will be encoded in JWT)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.email.split('@')[0], // Use email prefix as name fallback
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
           return null
-        }
-
-        // Return user object (will be encoded in JWT)
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
         }
       },
     }),

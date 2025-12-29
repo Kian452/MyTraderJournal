@@ -7,8 +7,6 @@ import Link from 'next/link'
 /**
  * Registration page
  * 
- * TODO: Implement actual registration API endpoint
- * TODO: Add form validation
  * TODO: Add password strength indicator
  * TODO: Add email verification flow
  * TODO: Add terms and conditions checkbox
@@ -29,45 +27,76 @@ export default function RegisterPage() {
       ...formData,
       [e.target.name]: e.target.value,
     })
+    // Clear error when user starts typing
+    if (error) setError('')
+  }
+
+  const validateForm = (): string | null => {
+    // Check required fields
+    if (!formData.name.trim()) {
+      return 'Name is required'
+    }
+
+    if (!formData.email.trim()) {
+      return 'Email is required'
+    }
+
+    if (!formData.password) {
+      return 'Password is required'
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      return 'Please enter a valid email address'
+    }
+
+    // Validate password length
+    if (formData.password.length < 8) {
+      return 'Password must be at least 8 characters'
+    }
+
+    // Check password match
+    if (formData.password !== formData.confirmPassword) {
+      return 'Passwords do not match'
+    }
+
+    return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
+    // Client-side validation
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
       return
     }
 
     setLoading(true)
 
     try {
-      // TODO: Replace with actual API call
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
           password: formData.password,
         }),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
+        // Success - redirect to login with success message
         router.push('/auth/login?registered=true')
-      } else if (response.status === 501) {
-        setError('Registration is not yet implemented. Please use the demo account for now.')
       } else {
-        const data = await response.json()
+        // Server returned an error
         setError(data.error || 'Registration failed. Please try again.')
       }
     } catch (err) {

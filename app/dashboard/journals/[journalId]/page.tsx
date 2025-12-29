@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { fetchJournal } from '@/lib/api/journals'
 import { fetchTrades, createTrade, updateTrade, deleteTrade, type Trade } from '@/lib/api/trades'
@@ -33,12 +33,7 @@ export default function JournalDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Fetch journal and trades on mount
-  useEffect(() => {
-    loadData()
-  }, [journalId])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -58,7 +53,12 @@ export default function JournalDetailPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [journalId])
+
+  // Fetch journal and trades on mount
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleAddTrade = () => {
     setEditingTrade(null)
@@ -201,7 +201,7 @@ export default function JournalDetailPage() {
         </Link>
         <h1 className="text-3xl font-bold text-white mb-2">Journal Not Found</h1>
         <p className="text-gray-400">
-          The journal you're looking for doesn't exist.
+          The journal you&apos;re looking for doesn&apos;t exist.
         </p>
       </div>
     )
