@@ -1,0 +1,175 @@
+// Prisma Schema for MyTradingJournal
+// PostgreSQL database schema for trading journal application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MODEL
+// ============================================================================
+// Core user account information
+// Used for authentication and as the root entity for all user data
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  journals     Journal[]
+
+  @@map("users")
+  @@index([email])
+}
+
+// ============================================================================
+// JOURNAL MODEL
+// ============================================================================
+// Trading journals belong to users
+// Each journal tracks a separate trading account or strategy
+// Capital is updated after each trade to enable real-time analytics
+
+model Journal {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  name           String
+  startingCapital Float    @map("starting_capital") // Initial capital when journal was created
+  currentCapital  Float    @map("current_capital")  // Updated after each trade
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades         Trade[]
+  attributes     JournalAttribute[]
+
+  @@map("journals")
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
+// ============================================================================
+// TRADE MODEL
+// ============================================================================
+// Individual trades within a journal
+// Stores P&L, risk/reward ratio, and win/loss status
+// Optimized for analytics queries (equity curve, winrate, R/R analysis)
+
+model Trade {
+  id          String    @id @default(uuid())
+  journalId   String    @map("journal_id")
+  profitLoss  Float     @map("profit_loss") // Can be positive (profit) or negative (loss)
+  riskReward  Float?    @map("risk_reward")  // Risk/Reward ratio (nullable for flexibility)
+  isWin       Boolean   @map("is_win")       // Derived from profitLoss > 0, stored for fast analytics
+  tradeDate   DateTime  @default(now()) @map("trade_date") // Date of the trade (can be historical)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  journal     Journal   @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  attributeValues TradeAttributeValue[]
+
+  @@map("trades")
+  @@index([journalId])
+  @@index([journalId, tradeDate])
+  @@index([journalId, isWin])
+  @@index([journalId, createdAt])
+  // Composite index for common analytics queries (equity curve, calendar P&L)
+  @@index([journalId, tradeDate, profitLoss])
+}
+
+// ============================================================================
+// JOURNAL ATTRIBUTE MODEL
+// ============================================================================
+// Defines custom attributes that can be attached to trades in a specific journal
+// Each journal can have its own set of custom attributes
+// Examples: "Strategy", "Market Condition", "Screenshot", "Notes"
+
+model JournalAttribute {
+  id          String    @id @default(uuid())
+  journalId   String    @map("journal_id")
+  name        String    // Attribute name (e.g., "Strategy", "Market Condition")
+  type        AttributeType @default(TEXT) // Data type for the attribute
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  journal     Journal   @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  values      TradeAttributeValue[]
+
+  @@map("journal_attributes")
+  @@index([journalId])
+  @@unique([journalId, name]) // Prevent duplicate attribute names per journal
+}
+
+// ============================================================================
+// TRADE ATTRIBUTE VALUE MODEL
+// ============================================================================
+// Stores the actual values for custom attributes on individual trades
+// Uses separate columns for each data type to avoid JSON and enable proper indexing
+// Only one value column should be populated per row (based on JournalAttribute.type)
+
+model TradeAttributeValue {
+  id                String    @id @default(uuid())
+  tradeId           String    @map("trade_id")
+  journalAttributeId String   @map("journal_attribute_id")
+  valueText         String?   @map("value_text")     // For TEXT type attributes
+  valueNumber       Float?    @map("value_number")   // For NUMBER type attributes
+  valueBoolean      Boolean?  @map("value_boolean")  // For BOOLEAN type attributes
+  valueImageUrl     String?   @map("value_image_url") // For IMAGE type attributes (URL to stored image)
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  trade             Trade     @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  journalAttribute JournalAttribute @relation(fields: [journalAttributeId], references: [id], onDelete: Cascade)
+
+  @@map("trade_attribute_values")
+  @@index([tradeId])
+  @@index([journalAttributeId])
+  @@unique([tradeId, journalAttributeId]) // One value per attribute per trade
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum AttributeType {
+  TEXT    // String values (e.g., "Strategy name", "Notes")
+  NUMBER  // Numeric values (e.g., "Position size", "Entry price")
+  BOOLEAN // True/false values (e.g., "Followed plan", "Revenge trade")
+  IMAGE   // Image URLs (e.g., "Screenshot", "Chart")
+}
+
+// ============================================================================
+// ANALYTICS NOTES
+// ============================================================================
+// The schema is optimized for the following analytics queries:
+//
+// 1. EQUITY CURVE:
+//    - Query: trades ordered by tradeDate, sum profitLoss cumulatively
+//    - Index: [journalId, tradeDate, profitLoss] supports this efficiently
+//
+// 2. WIN RATE:
+//    - Query: COUNT(*) WHERE isWin = true / COUNT(*)
+//    - Index: [journalId, isWin] enables fast filtering
+//
+// 3. RISK/REWARD ANALYSIS:
+//    - Query: AVG(riskReward) WHERE isWin = true/false
+//    - Index: [journalId, isWin] supports grouping
+//
+// 4. CALENDAR P&L:
+//    - Query: SUM(profitLoss) GROUP BY DATE(tradeDate)
+//    - Index: [journalId, tradeDate] enables date-based grouping
+//
+// 5. CUSTOM ATTRIBUTE ANALYTICS:
+//    - Query trades filtered by TradeAttributeValue values
+//    - Indexes on tradeId and journalAttributeId support joins
+//
+// 6. CAPITAL TRACKING:
+//    - currentCapital in Journal is updated after each trade
+//    - Can be recalculated from trades if needed: startingCapital + SUM(profitLoss)
+
