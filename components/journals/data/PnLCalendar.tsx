@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import type { Trade } from '@/lib/store'
+import type { Trade } from '@/lib/api/trades'
 import type { DailyPnL } from '@/lib/analytics'
 
 interface PnLCalendarProps {

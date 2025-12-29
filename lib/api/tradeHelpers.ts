@@ -4,7 +4,7 @@
  */
 
 import { computeTrade } from '@/lib/tradeMath'
-import type { TradeOutcome } from '@/lib/store'
+import type { TradeOutcome } from '@/lib/types'
 
 export interface TradeInput {
   tradeDate?: Date | string

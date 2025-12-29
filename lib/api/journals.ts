@@ -3,7 +3,8 @@
  * Handles all API calls related to journals
  */
 
-export type Currency = 'USD' | 'EUR'
+import type { Currency } from '@/lib/types'
+export type { Currency }
 
 export interface Journal {
   id: string

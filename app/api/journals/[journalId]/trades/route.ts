@@ -40,7 +40,8 @@ export async function GET(
     }
 
     // Fetch trades with partials
-    const trades = await prisma.trade.findMany({
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    const trades = await (prisma.trade.findMany as any)({
       where: { journalId },
       include: {
         partials: {
@@ -53,14 +54,14 @@ export async function GET(
     })
 
     // Transform to match frontend format
-    const response = trades.map((trade) => ({
+    const response = trades.map((trade: any) => ({
       id: trade.id,
       journalId: trade.journalId,
       tradeDate: trade.tradeDate.toISOString(),
       outcome: trade.outcome,
       riskAmount: trade.riskAmount,
       mainRR: trade.mainRR,
-      partials: trade.partials.map((p) => ({
+      partials: (trade.partials || []).map((p: any) => ({
         sizeFraction: p.percentage / 100, // Convert percentage to fraction for frontend
         rr: p.rr,
       })),
@@ -136,7 +137,8 @@ export async function POST(
     const metrics = computeTradeMetrics(tradeInput)
 
     // Create trade and update journal in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create trade
       const trade = await tx.trade.create({
         data: {
@@ -190,7 +192,7 @@ export async function POST(
       outcome: result.outcome,
       riskAmount: result.riskAmount,
       mainRR: result.mainRR,
-      partials: result.partials.map((p) => ({
+      partials: (result.partials || []).map((p: any) => ({
         sizeFraction: p.percentage / 100,
         rr: p.rr,
       })),

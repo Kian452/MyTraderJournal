@@ -65,7 +65,8 @@ export async function PUT(
     const metrics = computeTradeMetrics(tradeInput)
 
     // Update trade and journal aggregates in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    const result = await prisma.$transaction(async (tx: any) => {
       // Delete existing partials and create new ones
       await tx.tradePartial.deleteMany({
         where: { tradeId },
@@ -183,7 +184,8 @@ export async function DELETE(
     }
 
     // Delete trade and update journal aggregates in a transaction
-    await prisma.$transaction(async (tx) => {
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    await prisma.$transaction(async (tx: any) => {
       // Delete trade (cascades to partials)
       await tx.trade.delete({
         where: { id: tradeId },

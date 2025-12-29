@@ -3,7 +3,8 @@
  * Handles all API calls related to trades
  */
 
-export type TradeOutcome = 'WIN' | 'LOSS' | 'BE'
+import type { TradeOutcome } from '@/lib/types'
+export type { TradeOutcome }
 
 export interface TradePartial {
   sizeFraction: number // 0-1

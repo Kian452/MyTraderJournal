@@ -1,4 +1,4 @@
-import { Trade } from '@/lib/store'
+import type { Trade } from '@/lib/api/trades'
 import {
   computeWinrate,
   computeAvgR,

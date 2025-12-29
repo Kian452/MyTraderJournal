@@ -3,7 +3,12 @@
  * Centralized logic for computing trade metrics
  */
 
-import type { TradeOutcome, TradePartial } from './store'
+import type { TradeOutcome } from './types'
+
+export interface TradePartial {
+  sizeFraction: number // 0-1
+  rr: number
+}
 
 export interface TradeInput {
   outcome: TradeOutcome

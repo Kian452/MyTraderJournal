@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import type { Currency } from '@/lib/api/journals'
+import type { Currency } from '@/lib/types'
 
 interface CreateJournalModalProps {
   isOpen: boolean

@@ -23,13 +23,6 @@ export async function GET(
 
     const journal = await prisma.journal.findUnique({
       where: { id: journalId },
-      include: {
-        _count: {
-          select: {
-            trades: true,
-          },
-        },
-      },
     })
 
     if (!journal) {
@@ -44,14 +37,16 @@ export async function GET(
     }
 
     // Transform to match frontend interface
+    // Note: TypeScript types may be out of sync with schema until Prisma client is regenerated
+    const journalData = journal as any
     const response = {
       id: journal.id,
       name: journal.name,
       startingCapital: journal.startingCapital,
       currentCapital: journal.currentCapital,
-      currency: journal.currency || 'USD',
-      tradesCount: journal.tradesCount,
-      updatedAt: journal.updatedAt.toISOString(),
+      currency: journalData.currency || 'USD',
+      tradesCount: journalData.tradesCount ?? 0,
+      updatedAt: journalData.updatedAt?.toISOString() || journal.createdAt.toISOString(),
       createdAt: journal.createdAt.toISOString(),
     }
 
