@@ -42,21 +42,18 @@ export default function Home() {
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="p-6 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 transition-all duration-300 hover:shadow-lg">
-              <div className="text-4xl mb-4">📊</div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Build Discipline</h3>
               <p className="text-gray-600 dark:text-gray-300">
                 Track every trade to maintain consistency and stick to your trading plan. Accountability leads to better decisions.
               </p>
             </div>
             <div className="p-6 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 transition-all duration-300 hover:shadow-lg">
-              <div className="text-4xl mb-4">🔍</div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Pattern Recognition</h3>
               <p className="text-gray-600 dark:text-gray-300">
                 Identify what works and what doesn&apos;t. Spot recurring patterns in your winning and losing trades.
               </p>
             </div>
             <div className="p-6 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 transition-all duration-300 hover:shadow-lg">
-              <div className="text-4xl mb-4">📈</div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Improve Results</h3>
               <p className="text-gray-600 dark:text-gray-300">
                 Make data-driven decisions. Understand your risk-reward ratios and optimize your trading strategy.
@@ -74,18 +71,17 @@ export default function Home() {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: '📝', title: 'Multiple Journals', desc: 'Track different strategies or accounts separately' },
-              { icon: '💰', title: 'Trade Tracking', desc: 'Record every trade with risk amount, outcome, and RR' },
-              { icon: '📊', title: 'Partial Exits', desc: 'Track complex trades with multiple exit points' },
-              { icon: '📈', title: 'Equity Curve', desc: 'Visualize your account growth over time' },
-              { icon: '📅', title: 'Calendar P/L', desc: 'See daily profit and loss at a glance' },
-              { icon: '🎯', title: 'Win Rate & Metrics', desc: 'Track win rate, average RR, and key performance indicators' },
+              { title: 'Multiple Journals', desc: 'Track different strategies or accounts separately' },
+              { title: 'Trade Tracking', desc: 'Record every trade with risk amount, outcome, and RR' },
+              { title: 'Partial Exits', desc: 'Track complex trades with multiple exit points' },
+              { title: 'Equity Curve', desc: 'Visualize your account growth over time' },
+              { title: 'Calendar P/L', desc: 'See daily profit and loss at a glance' },
+              { title: 'Win Rate & Metrics', desc: 'Track win rate, average RR, and key performance indicators' },
             ].map((feature, i) => (
               <div
                 key={i}
                 className="p-6 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700"
               >
-                <div className="text-3xl mb-3">{feature.icon}</div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">{feature.desc}</p>
               </div>
