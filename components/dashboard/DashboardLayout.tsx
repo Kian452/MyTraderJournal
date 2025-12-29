@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Left: App Name */}
             <div className="flex items-center">
               <Link href="/dashboard/journals" className="text-xl font-semibold text-white">
-                MyTradingJourney
+                MyTraderJournal
               </Link>
             </div>
 

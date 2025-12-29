@@ -1,4 +1,4 @@
-# MyTradingJournal
+# MyTraderJournal
 
 A trading journal web application built with Next.js, TypeScript, and PostgreSQL.
 

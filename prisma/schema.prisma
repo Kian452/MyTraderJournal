@@ -1,4 +1,4 @@
-// Prisma Schema for MyTradingJournal
+// Prisma Schema for MyTraderJournal
 // PostgreSQL database schema for trading journal application
 
 generator client {
