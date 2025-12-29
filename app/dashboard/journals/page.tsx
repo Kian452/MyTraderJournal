@@ -101,15 +101,15 @@ export default function JournalsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Journals</h1>
-          <p className="text-gray-400">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">Journals</h1>
+          <p className="text-gray-600 dark:text-gray-400 transition-colors">
             Manage your trading journals and track your performance
           </p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           disabled={isCreating}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-md hover:shadow-lg"
         >
           {isCreating ? 'Creating...' : '+ New Journal'}
         </button>
@@ -117,24 +117,24 @@ export default function JournalsPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-md text-red-400">
+        <div className="mb-6 p-4 bg-red-500/20 dark:bg-red-500/20 border border-red-500/50 dark:border-red-500/50 rounded-md text-red-600 dark:text-red-400 transition-colors">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">{error}</p>
-              <p className="text-sm text-red-300 mt-1">
+              <p className="text-sm text-red-500 dark:text-red-300 mt-1 transition-colors">
                 Please check your connection and try again.
               </p>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleRetry}
-                className="px-3 py-1 text-sm bg-red-500/30 hover:bg-red-500/40 rounded transition-colors"
+                className="px-3 py-1 text-sm bg-red-500/30 dark:bg-red-500/30 hover:bg-red-500/40 dark:hover:bg-red-500/40 rounded transition-colors"
               >
                 Retry
               </button>
               <button
                 onClick={() => setError(null)}
-                className="text-red-300 hover:text-red-200"
+                className="text-red-500 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200 transition-colors"
                 aria-label="Dismiss"
               >
                 ×
@@ -147,8 +147,8 @@ export default function JournalsPage() {
       {/* Loading State */}
       {isLoading ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-400">Loading journals...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 dark:border-purple-500 mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 transition-colors">Loading journals...</p>
         </div>
       ) : (
         <>
@@ -161,11 +161,12 @@ export default function JournalsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {journals.map((journal) => (
-                <JournalCard
-                  key={journal.id}
-                  journal={journal}
-                  onDelete={handleDeleteJournal}
-                />
+                <div key={journal.id} className="transition-transform duration-300 hover:scale-105">
+                  <JournalCard
+                    journal={journal}
+                    onDelete={handleDeleteJournal}
+                  />
+                </div>
               ))}
             </div>
           )}

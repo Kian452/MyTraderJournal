@@ -33,12 +33,53 @@ export function computeWinrate(trades: Trade[]): number {
 }
 
 /**
- * Compute average R multiple
+ * Compute average R multiple (actual result-based metric)
+ * @deprecated Use computeAvgRR for planned risk-reward ratio instead
  */
 export function computeAvgR(trades: Trade[]): number {
   if (trades.length === 0) return 0
   const sum = trades.reduce((acc, t) => acc + t.rMultiple, 0)
   return sum / trades.length
+}
+
+/**
+ * Compute average planned risk-to-reward ratio (RR) per trade
+ * Uses the planned RR (mainRR) independent of trade outcome
+ * For trades with partials, uses mainRR if available, otherwise calculates weighted average from partials
+ * Trades without a planned RR are excluded from the average
+ */
+export function computeAvgRR(trades: Trade[]): number {
+  if (trades.length === 0) return 0
+  
+  const validRRs: number[] = []
+  
+  for (const trade of trades) {
+    let plannedRR: number | null = null
+    
+    // Use mainRR if available (preferred)
+    if (trade.mainRR !== null && trade.mainRR !== undefined && trade.mainRR > 0) {
+      plannedRR = trade.mainRR
+    } else if (trade.partials && trade.partials.length > 0) {
+      // Calculate weighted average from partials if no mainRR
+      const totalFraction = trade.partials.reduce((sum, p) => sum + p.sizeFraction, 0)
+      if (totalFraction > 0) {
+        const weightedRR = trade.partials.reduce(
+          (sum, p) => sum + (p.sizeFraction / totalFraction) * p.rr,
+          0
+        )
+        plannedRR = weightedRR
+      }
+    }
+    
+    // Only include trades with a valid planned RR
+    if (plannedRR !== null && plannedRR > 0) {
+      validRRs.push(plannedRR)
+    }
+  }
+  
+  if (validRRs.length === 0) return 0
+  const sum = validRRs.reduce((acc, rr) => acc + rr, 0)
+  return sum / validRRs.length
 }
 
 /**

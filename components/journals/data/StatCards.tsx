@@ -1,7 +1,7 @@
 import type { Trade } from '@/lib/api/trades'
 import {
   computeWinrate,
-  computeAvgR,
+  computeAvgRR,
   computeAvgTradesPerDay,
 } from '@/lib/analytics'
 
@@ -10,6 +10,13 @@ interface StatCardsProps {
   totalPL: number
   currentCapital: number
   currency: string
+}
+
+interface StatItem {
+  label: string
+  value: string
+  valueColor?: string
+  tooltip?: string
 }
 
 /**
@@ -33,10 +40,10 @@ export default function StatCards({
 
   const tradesCount = trades.length
   const winrate = computeWinrate(trades)
-  const avgR = computeAvgR(trades)
+  const avgRR = computeAvgRR(trades)
   const avgTradesPerDay = computeAvgTradesPerDay(trades)
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       label: 'Trades',
       value: tradesCount.toString(),
@@ -51,8 +58,9 @@ export default function StatCards({
       value: `${winrate.toFixed(1)}%`,
     },
     {
-      label: 'Avg R',
-      value: avgR >= 0 ? `+${avgR.toFixed(2)}R` : `${avgR.toFixed(2)}R`,
+      label: 'Avg RR',
+      value: `${avgRR.toFixed(2)}R`,
+      tooltip: 'Average planned risk-to-reward per trade',
     },
     {
       label: 'Current Capital',
@@ -69,11 +77,34 @@ export default function StatCards({
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="bg-gray-800/50 border border-gray-700 rounded-lg p-4"
+          className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-all duration-300 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700"
         >
-          <div className="text-sm text-gray-400 mb-1">{stat.label}</div>
+          <div className="flex items-center gap-1 mb-1">
+            <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors">{stat.label}</div>
+            {stat.tooltip && (
+              <div className="group relative">
+                <svg
+                  className="w-3 h-3 text-gray-400 dark:text-gray-500 cursor-help"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                  {stat.tooltip}
+                </div>
+              </div>
+            )}
+          </div>
           <div
-            className={`text-lg font-semibold text-white ${
+            className={`text-lg font-semibold text-gray-900 dark:text-white transition-colors ${
               stat.valueColor || ''
             }`}
           >

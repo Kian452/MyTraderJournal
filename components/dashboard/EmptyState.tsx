@@ -19,7 +19,7 @@ export default function EmptyState({
       {/* Icon/Illustration */}
       <div className="mb-6">
         <svg
-          className="w-24 h-24 text-gray-600"
+          className="w-24 h-24 text-purple-300 dark:text-purple-600 transition-colors"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -35,12 +35,12 @@ export default function EmptyState({
       </div>
 
       {/* Headline */}
-      <h2 className="text-2xl font-semibold text-white mb-2 text-center">
+      <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2 text-center transition-colors">
         {title}
       </h2>
 
       {/* Supporting Text */}
-      <p className="text-gray-400 text-center max-w-md mb-6">
+      <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6 transition-colors">
         {description}
       </p>
 
@@ -48,7 +48,7 @@ export default function EmptyState({
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium transition-colors"
+          className="bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
         >
           {actionLabel}
         </button>

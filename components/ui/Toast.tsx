@@ -26,10 +26,10 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
 
   const bgColor =
     type === 'success'
-      ? 'bg-green-500/20 border-green-500/50 text-green-400'
+      ? 'bg-green-500/20 dark:bg-green-500/20 border-green-500/50 dark:border-green-500/50 text-green-600 dark:text-green-400'
       : type === 'error'
-      ? 'bg-red-500/20 border-red-500/50 text-red-400'
-      : 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+      ? 'bg-red-500/20 dark:bg-red-500/20 border-red-500/50 dark:border-red-500/50 text-red-600 dark:text-red-400'
+      : 'bg-purple-500/20 dark:bg-purple-500/20 border-purple-500/50 dark:border-purple-500/50 text-purple-600 dark:text-purple-400'
 
   return (
     <div

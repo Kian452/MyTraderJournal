@@ -169,12 +169,12 @@ export default function CreateJournalModal({
     >
       <div
         ref={modalRef}
-        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 border border-gray-700"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 border border-gray-200 dark:border-gray-700 transition-all duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-white">Create Journal</h2>
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Create Journal</h2>
         </div>
 
         {/* Form */}
@@ -184,9 +184,9 @@ export default function CreateJournalModal({
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Name <span className="text-red-400">*</span>
+                Name <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -194,12 +194,12 @@ export default function CreateJournalModal({
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors"
                 placeholder="e.g., Forex Trading Journal"
                 required
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-400">{errors.name}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.name}</p>
               )}
             </div>
 
@@ -207,9 +207,9 @@ export default function CreateJournalModal({
             <div>
               <label
                 htmlFor="startingCapital"
-                className="block text-sm font-medium text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Starting Capital <span className="text-red-400">*</span>
+                Starting Capital <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="number"
@@ -219,12 +219,12 @@ export default function CreateJournalModal({
                 onChange={handleChange}
                 step="0.01"
                 min="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors"
                 placeholder="10000"
                 required
               />
               {errors.startingCapital && (
-                <p className="mt-1 text-sm text-red-400">
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
                   {errors.startingCapital}
                 </p>
               )}
@@ -234,7 +234,7 @@ export default function CreateJournalModal({
             <div>
               <label
                 htmlFor="currency"
-                className="block text-sm font-medium text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
                 Currency
               </label>
@@ -243,7 +243,7 @@ export default function CreateJournalModal({
                 name="currency"
                 value={formData.currency}
                 onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors"
               >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -254,37 +254,37 @@ export default function CreateJournalModal({
             <div>
               <label
                 htmlFor="template"
-                className="block text-sm font-medium text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Use Template <span className="text-xs text-gray-500">(Coming Soon)</span>
+                Use Template <span className="text-xs text-gray-500 dark:text-gray-400">(Coming Soon)</span>
               </label>
               <select
                 id="template"
                 name="template"
                 disabled
-                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-md text-gray-500 cursor-not-allowed focus:outline-none"
+                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600/50 rounded-md text-gray-500 dark:text-gray-400 cursor-not-allowed focus:outline-none transition-colors"
               >
                 <option value="">None (Start Fresh)</option>
               </select>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 transition-colors">
                 Template feature will allow you to copy settings from existing journals
               </p>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
+          <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!isFormValid() || isSubmitting}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-md transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isSubmitting ? 'Creating...' : 'Create'}
             </button>

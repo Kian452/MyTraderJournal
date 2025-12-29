@@ -57,21 +57,21 @@ export default function JournalStats({
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Equity Curve */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Equity Curve</h3>
+        <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 transition-colors">Equity Curve</h3>
           <EquityCurve data={equityData} currency={currency} />
         </div>
 
         {/* Outcome Donut */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Wins vs Losses vs BE</h3>
+        <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 transition-colors">Wins vs Losses vs BE</h3>
           <OutcomeDonut data={outcomeCounts} />
         </div>
       </div>
 
       {/* Calendar P/L */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Calendar P/L</h3>
+      <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 transition-colors">Calendar P/L</h3>
         <PnLCalendar trades={trades} currency={currency} />
       </div>
     </div>

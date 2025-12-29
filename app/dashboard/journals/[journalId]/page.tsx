@@ -195,12 +195,12 @@ export default function JournalDetailPage() {
       <div>
         <Link
           href="/dashboard/journals"
-          className="text-blue-400 hover:text-blue-300 mb-6 inline-block"
+          className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-6 inline-block transition-colors"
         >
           ← Back to Journals
         </Link>
-        <h1 className="text-3xl font-bold text-white mb-2">Error</h1>
-        <p className="text-gray-400">{error}</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">Error</h1>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors">{error}</p>
       </div>
     )
   }
@@ -210,12 +210,12 @@ export default function JournalDetailPage() {
       <div>
         <Link
           href="/dashboard/journals"
-          className="text-blue-400 hover:text-blue-300 mb-4 inline-block"
+          className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-4 inline-block transition-colors"
         >
           ← Back to Journals
         </Link>
-        <h1 className="text-3xl font-bold text-white mb-2">Journal Not Found</h1>
-        <p className="text-gray-400">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">Journal Not Found</h1>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors">
           The journal you&apos;re looking for doesn&apos;t exist.
         </p>
       </div>
@@ -236,31 +236,31 @@ export default function JournalDetailPage() {
       {/* Back Link */}
       <Link
         href="/dashboard/journals"
-        className="text-blue-400 hover:text-blue-300 mb-6 inline-block"
+        className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-6 inline-block transition-colors"
       >
         ← Back to Journals
       </Link>
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-md text-red-400">
+        <div className="mb-6 p-4 bg-red-500/20 dark:bg-red-500/20 border border-red-500/50 dark:border-red-500/50 rounded-md text-red-600 dark:text-red-400 transition-colors">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">{error}</p>
-              <p className="text-sm text-red-300 mt-1">
+              <p className="text-sm text-red-500 dark:text-red-300 mt-1 transition-colors">
                 Please check your connection and try again.
               </p>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleRetry}
-                className="px-3 py-1 text-sm bg-red-500/30 hover:bg-red-500/40 rounded transition-colors"
+                className="px-3 py-1 text-sm bg-red-500/30 dark:bg-red-500/30 hover:bg-red-500/40 dark:hover:bg-red-500/40 rounded transition-colors"
               >
                 Retry
               </button>
               <button
                 onClick={() => setError(null)}
-                className="text-red-300 hover:text-red-200"
+                className="text-red-500 dark:text-red-300 hover:text-red-600 dark:hover:text-red-200 transition-colors"
                 aria-label="Dismiss"
               >
                 ×
@@ -293,7 +293,7 @@ export default function JournalDetailPage() {
           {activeTab === 'trades' && (
             <button
               onClick={handleAddTrade}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              className="bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
             >
               Add Trade
             </button>
@@ -305,7 +305,7 @@ export default function JournalDetailPage() {
       <JournalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+      <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg p-6 transition-colors duration-300 shadow-md">
         {activeTab === 'trades' ? (
           <div>
             {trades.length === 0 ? (
@@ -330,7 +330,7 @@ export default function JournalDetailPage() {
           </div>
         ) : activeTab === 'data' ? (
           <div>
-            <h2 className="text-xl font-semibold text-white mb-6">Analytics</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 transition-colors">Analytics</h2>
             <JournalStats
               trades={trades.map((t) => ({
                 ...t,
@@ -344,7 +344,7 @@ export default function JournalDetailPage() {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold text-white mb-6">Settings</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 transition-colors">Settings</h2>
             <JournalSettings journalId={journalId} />
           </div>
         )}

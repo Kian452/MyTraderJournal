@@ -40,31 +40,31 @@ export default function TradesTable({
     switch (outcome) {
       case 'WIN':
         return (
-          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-500/20 dark:bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 dark:border-green-500/30 transition-colors">
             WIN
           </span>
         )
       case 'LOSS':
         return (
-          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-500/20 dark:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 dark:border-red-500/30 transition-colors">
             LOSS
           </span>
         )
       case 'BE':
         return (
-          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-500/20 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400 border border-gray-500/30 dark:border-gray-500/30 transition-colors">
             BE
           </span>
         )
       default:
-        return <span className="text-gray-300">{outcome}</span>
+        return <span className="text-gray-700 dark:text-gray-300 transition-colors">{outcome}</span>
     }
   }
 
   if (trades.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">No trades yet. Add your first trade to get started.</p>
+        <p className="text-gray-600 dark:text-gray-400 transition-colors">No trades yet. Add your first trade to get started.</p>
       </div>
     )
   }
@@ -77,7 +77,7 @@ export default function TradesTable({
             <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Date</th>
             <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Outcome</th>
             <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Risk</th>
-            <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">R</th>
+            <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">RR</th>
             <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">P/L</th>
             {(onEdit || onDelete) && (
               <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
@@ -114,7 +114,6 @@ export default function TradesTable({
                   {formatCurrency(trade.riskAmount)}
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-gray-300 font-medium">
-                  {trade.rMultiple >= 0 ? '+' : ''}
                   {trade.rMultiple.toFixed(2)}R
                 </td>
                 <td className={`py-3 px-4 text-sm text-right font-medium ${plStyle}`}>

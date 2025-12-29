@@ -38,11 +38,11 @@ export default function JournalCard({ journal, onDelete }: JournalCardProps) {
   }
 
   return (
-    <div className="relative bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6 hover:bg-gray-800 hover:border-gray-600 transition-all">
+    <div className="relative bg-white dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:bg-purple-50 dark:hover:bg-gray-800 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 shadow-md hover:shadow-lg">
       {/* Delete Button */}
       <button
         onClick={handleDeleteClick}
-        className="absolute top-4 right-4 text-gray-400 hover:text-red-400 transition-colors p-1"
+        className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-300 p-1"
         aria-label={`Delete ${journal.name}`}
       >
         <svg
@@ -66,12 +66,12 @@ export default function JournalCard({ journal, onDelete }: JournalCardProps) {
         className="block cursor-pointer"
       >
         <div className="flex items-start justify-between mb-4 pr-8">
-          <h3 className="text-lg font-semibold text-white">{journal.name}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{journal.name}</h3>
           <span
-            className={`text-sm font-medium px-2 py-1 rounded ${
+            className={`text-sm font-medium px-2 py-1 rounded transition-colors ${
               profitLoss >= 0
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-red-500/20 text-red-400'
+                ? 'bg-green-500/20 dark:bg-green-500/20 text-green-600 dark:text-green-400'
+                : 'bg-red-500/20 dark:bg-red-500/20 text-red-600 dark:text-red-400'
             }`}
           >
             {profitLoss >= 0 ? '+' : ''}
@@ -81,29 +81,29 @@ export default function JournalCard({ journal, onDelete }: JournalCardProps) {
 
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-400">Current Capital</span>
-          <span className="text-lg font-semibold text-white">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Current Capital</span>
+          <span className="text-lg font-semibold text-gray-900 dark:text-white">
             {formatCurrency(journal.currentCapital, journal.currency)}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-400">Starting Capital</span>
-          <span className="text-sm text-gray-300">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Starting Capital</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             {formatCurrency(journal.startingCapital, journal.currency)}
           </span>
         </div>
 
-        <div className="flex justify-between items-center pt-2 border-t border-gray-700">
-          <span className="text-sm text-gray-400">Trades</span>
-          <span className="text-sm font-medium text-gray-300">
+        <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Trades</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {journal.tradesCount}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-400">Last Updated</span>
-          <span className="text-sm text-gray-300">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Last Updated</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             {formatDate(journal.updatedAt)}
           </span>
         </div>

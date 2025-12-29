@@ -81,30 +81,30 @@ export default function ConfirmDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 border border-gray-700"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 border border-gray-200 dark:border-gray-700 transition-all duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-white">{title}</h2>
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
         </div>
 
         {/* Message */}
         <div className="px-6 py-4">
-          <p className="text-gray-300">{message}</p>
+          <p className="text-gray-700 dark:text-gray-300 transition-colors">{message}</p>
           {confirmVariant === 'danger' && (
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors">
               This action cannot be undone.
             </p>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end space-x-3 px-6 py-4 border-t border-gray-700">
+        <div className="flex justify-end space-x-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 transition-colors">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             {cancelLabel}
           </button>
@@ -114,10 +114,10 @@ export default function ConfirmDialog({
               onConfirm()
               onClose()
             }}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 hover:scale-105 ${
               confirmVariant === 'danger'
                 ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white'
             }`}
           >
             {confirmLabel}
