@@ -7,7 +7,7 @@ interface TradesTableProps {
 
 /**
  * Trades table component
- * Displays trades in a table format
+ * Displays trades in a table format with new columns
  */
 export default function TradesTable({ trades, currency }: TradesTableProps) {
   const formatCurrency = (amount: number) => {
@@ -27,13 +27,16 @@ export default function TradesTable({ trades, currency }: TradesTableProps) {
     }).format(new Date(date))
   }
 
-  const getResult = (profitLoss: number): { label: string; className: string } => {
-    if (profitLoss > 0) {
-      return { label: 'Win', className: 'text-green-400' }
-    } else if (profitLoss < 0) {
-      return { label: 'Loss', className: 'text-red-400' }
-    } else {
-      return { label: 'BE', className: 'text-gray-400' }
+  const getOutcomeStyle = (outcome: string) => {
+    switch (outcome) {
+      case 'WIN':
+        return 'text-green-400'
+      case 'LOSS':
+        return 'text-red-400'
+      case 'BE':
+        return 'text-gray-400'
+      default:
+        return 'text-gray-300'
     }
   }
 
@@ -51,36 +54,48 @@ export default function TradesTable({ trades, currency }: TradesTableProps) {
         <thead>
           <tr className="border-b border-gray-700">
             <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Date</th>
+            <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Outcome</th>
+            <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Risk</th>
+            <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">R</th>
             <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">P/L</th>
-            <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">RR</th>
-            <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Result</th>
           </tr>
         </thead>
         <tbody>
           {trades.map((trade) => {
-            const result = getResult(trade.profitLoss)
+            const outcomeStyle = getOutcomeStyle(trade.outcome)
+            const plStyle =
+              trade.profitLoss > 0
+                ? 'text-green-400'
+                : trade.profitLoss < 0
+                ? 'text-red-400'
+                : 'text-gray-400'
+
             return (
               <tr
                 key={trade.id}
-                className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors"
+                className={`border-b border-gray-800 hover:bg-gray-800/30 transition-colors ${
+                  trade.outcome === 'WIN'
+                    ? 'bg-green-500/5'
+                    : trade.outcome === 'LOSS'
+                    ? 'bg-red-500/5'
+                    : ''
+                }`}
               >
-                <td className="py-3 px-4 text-sm text-gray-300">{formatDate(trade.tradeDate)}</td>
-                <td
-                  className={`py-3 px-4 text-sm text-right font-medium ${
-                    trade.profitLoss > 0
-                      ? 'text-green-400'
-                      : trade.profitLoss < 0
-                      ? 'text-red-400'
-                      : 'text-gray-400'
-                  }`}
-                >
-                  {formatCurrency(trade.profitLoss)}
+                <td className="py-3 px-4 text-sm text-gray-300">
+                  {formatDate(trade.tradeDate)}
+                </td>
+                <td className={`py-3 px-4 text-sm text-center font-medium ${outcomeStyle}`}>
+                  {trade.outcome}
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-gray-300">
-                  {trade.riskReward.toFixed(2)}
+                  {formatCurrency(trade.riskAmount)}
                 </td>
-                <td className={`py-3 px-4 text-sm text-right font-medium ${result.className}`}>
-                  {result.label}
+                <td className="py-3 px-4 text-sm text-right text-gray-300">
+                  {trade.rMultiple >= 0 ? '+' : ''}
+                  {trade.rMultiple.toFixed(2)}R
+                </td>
+                <td className={`py-3 px-4 text-sm text-right font-medium ${plStyle}`}>
+                  {formatCurrency(trade.profitLoss)}
                 </td>
               </tr>
             )
@@ -90,4 +105,3 @@ export default function TradesTable({ trades, currency }: TradesTableProps) {
     </div>
   )
 }
-

@@ -9,7 +9,7 @@ interface JournalStatsProps {
 
 /**
  * Journal statistics component
- * Displays computed stats from trades
+ * Displays computed stats from trades using new trade model
  */
 export default function JournalStats({
   trades,
@@ -26,15 +26,18 @@ export default function JournalStats({
     }).format(amount)
   }
 
-  // Calculate stats
+  // Calculate stats using new trade model
   const tradesCount = trades.length
   const totalPL = trades.reduce((sum, t) => sum + t.profitLoss, 0)
-  const wins = trades.filter((t) => t.profitLoss > 0).length
-  const losses = trades.filter((t) => t.profitLoss < 0).length
+  
+  // Winrate: wins / total trades (LOSS and BE are non-wins)
+  const wins = trades.filter((t) => t.outcome === 'WIN' && t.profitLoss > 0).length
   const winrate = tradesCount > 0 ? (wins / tradesCount) * 100 : 0
-  const avgRR =
+  
+  // Average R: average of rMultiple across all trades
+  const avgR =
     tradesCount > 0
-      ? trades.reduce((sum, t) => sum + t.riskReward, 0) / tradesCount
+      ? trades.reduce((sum, t) => sum + t.rMultiple, 0) / tradesCount
       : 0
 
   const stats = [
@@ -52,8 +55,8 @@ export default function JournalStats({
       value: `${winrate.toFixed(1)}%`,
     },
     {
-      label: 'Avg RR',
-      value: avgRR > 0 ? avgRR.toFixed(2) : '0.00',
+      label: 'Avg R',
+      value: avgR >= 0 ? `+${avgR.toFixed(2)}R` : `${avgR.toFixed(2)}R`,
     },
     {
       label: 'Current Capital',
@@ -102,4 +105,3 @@ export default function JournalStats({
     </div>
   )
 }
-

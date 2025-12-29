@@ -10,12 +10,23 @@
 
 import { Journal, Currency } from './mockJournals'
 
+export type TradeOutcome = 'WIN' | 'LOSS' | 'BE'
+
+export interface TradePartial {
+  sizeFraction: number // 0.01 to 1.00
+  rr: number // > 0
+}
+
 export interface Trade {
   id: string
   journalId: string
-  profitLoss: number
-  riskReward: number
   tradeDate: Date
+  outcome: TradeOutcome
+  riskAmount: number
+  mainRR: number | null // nullable if partials total to 1.0
+  partials: TradePartial[]
+  profitLoss: number // computed
+  rMultiple: number // computed (profitLoss / riskAmount)
   createdAt: Date
 }
 
@@ -24,14 +35,22 @@ let journals: Journal[] = []
 let trades: Trade[] = []
 let listeners: Set<() => void> = new Set()
 
+// Cached snapshot for stability (only updated when data changes)
+let cachedSnapshot: { journals: Journal[]; trades: Trade[] } | null = null
+let snapshotVersion = 0
+
 // Event emitter for React state synchronization
 function emitChange() {
+  // Invalidate cached snapshot
+  cachedSnapshot = null
+  snapshotVersion++
   listeners.forEach((listener) => listener())
 }
 
 // Subscribe to store changes
 export function subscribe(listener: () => void) {
   listeners.add(listener)
+  // DO NOT call listener immediately - let React handle initial render
   return () => {
     listeners.delete(listener)
   }
@@ -73,7 +92,7 @@ function initialize() {
       },
     ]
     journals = mockJournals
-    emitChange()
+    // Don't emit change during initialization - let React handle it
   }
 }
 
@@ -100,11 +119,37 @@ if (typeof window !== 'undefined') {
   if (storedTrades) {
     try {
       const parsed = JSON.parse(storedTrades)
-      trades = parsed.map((t: any) => ({
-        ...t,
-        tradeDate: new Date(t.tradeDate),
-        createdAt: new Date(t.createdAt),
-      }))
+      trades = parsed.map((t: any) => {
+        // Migrate old trade format to new format
+        if (t.profitLoss !== undefined && t.riskReward !== undefined && !t.outcome) {
+          // Old format: convert to new format
+          const outcome: TradeOutcome =
+            t.profitLoss > 0 ? 'WIN' : t.profitLoss < 0 ? 'LOSS' : 'BE'
+          const riskAmount = Math.abs(t.profitLoss / (t.profitLoss > 0 ? t.riskReward : -1))
+          
+          return {
+            id: t.id,
+            journalId: t.journalId,
+            tradeDate: new Date(t.tradeDate),
+            outcome,
+            riskAmount: riskAmount || 100, // fallback if calculation fails
+            mainRR: outcome === 'WIN' ? t.riskReward : null,
+            partials: [],
+            profitLoss: t.profitLoss,
+            rMultiple: riskAmount > 0 ? t.profitLoss / riskAmount : (outcome === 'BE' ? 0 : -1),
+            createdAt: new Date(t.createdAt),
+          }
+        }
+        
+        // New format: just convert dates
+        return {
+          ...t,
+          tradeDate: new Date(t.tradeDate),
+          createdAt: new Date(t.createdAt),
+        }
+      })
+      // Persist migrated trades
+      persist()
     } catch (e) {
       // Ignore parse errors
     }
@@ -121,7 +166,7 @@ function persist() {
 
 // Journal operations
 export function listJournals(): Journal[] {
-  return [...journals]
+  return journals
 }
 
 export function getJournal(id: string): Journal | undefined {
@@ -172,6 +217,64 @@ function updateJournalCapital(journalId: string): void {
   emitChange()
 }
 
+// Compute profitLoss and rMultiple based on outcome, risk, RR, and partials
+function computeTradeMetrics(
+  outcome: TradeOutcome,
+  riskAmount: number,
+  mainRR: number | null,
+  partials: TradePartial[]
+): { profitLoss: number; rMultiple: number } {
+  if (outcome === 'LOSS') {
+    return {
+      profitLoss: -riskAmount,
+      rMultiple: -1,
+    }
+  }
+
+  if (outcome === 'BE') {
+    return {
+      profitLoss: 0,
+      rMultiple: 0,
+    }
+  }
+
+  // WIN outcome
+  if (partials.length === 0) {
+    // No partials: simple calculation
+    if (!mainRR) {
+      throw new Error('mainRR is required for WIN outcome without partials')
+    }
+    const profitLoss = riskAmount * mainRR
+    return {
+      profitLoss,
+      rMultiple: mainRR,
+    }
+  }
+
+  // With partials
+  const totalFraction = partials.reduce((sum, p) => sum + p.sizeFraction, 0)
+  const remaining = Math.max(0, 1 - totalFraction)
+
+  // Calculate profit from partials
+  const partialProfit = partials.reduce(
+    (sum, p) => sum + riskAmount * p.sizeFraction * p.rr,
+    0
+  )
+
+  // Calculate profit from remaining (if any)
+  const remainingProfit = remaining > 0 && mainRR
+    ? riskAmount * remaining * mainRR
+    : 0
+
+  const profitLoss = partialProfit + remainingProfit
+  const rMultiple = profitLoss / riskAmount
+
+  return {
+    profitLoss,
+    rMultiple,
+  }
+}
+
 // Trade operations
 export function listTrades(journalId: string): Trade[] {
   return trades
@@ -182,17 +285,31 @@ export function listTrades(journalId: string): Trade[] {
 export function addTrade(
   journalId: string,
   data: {
-    profitLoss: number
-    riskReward: number
     tradeDate: Date
+    outcome: TradeOutcome
+    riskAmount: number
+    mainRR: number | null
+    partials: TradePartial[]
   }
 ): Trade {
+  // Compute profitLoss and rMultiple
+  const { profitLoss, rMultiple } = computeTradeMetrics(
+    data.outcome,
+    data.riskAmount,
+    data.mainRR,
+    data.partials
+  )
+
   const newTrade: Trade = {
     id: Date.now().toString(),
     journalId,
-    profitLoss: data.profitLoss,
-    riskReward: data.riskReward,
     tradeDate: data.tradeDate,
+    outcome: data.outcome,
+    riskAmount: data.riskAmount,
+    mainRR: data.mainRR,
+    partials: data.partials,
+    profitLoss,
+    rMultiple,
     createdAt: new Date(),
   }
   trades.push(newTrade)
@@ -201,7 +318,23 @@ export function addTrade(
 }
 
 // Get current snapshot (for useSyncExternalStore)
+// Returns a stable reference - only creates new object when data actually changes
 export function getSnapshot() {
-  return { journals, trades }
+  // Return cached snapshot if available and data hasn't changed
+  if (cachedSnapshot) {
+    return cachedSnapshot
+  }
+  
+  // Create new snapshot only when data changes
+  cachedSnapshot = {
+    journals,
+    trades,
+  }
+  
+  return cachedSnapshot
 }
 
+// Get snapshot version for comparison (optional, for debugging)
+export function getSnapshotVersion() {
+  return snapshotVersion
+}

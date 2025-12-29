@@ -52,9 +52,11 @@ export default function JournalDetailPage() {
   }
 
   const handleAddTrade = (data: {
-    profitLoss: number
-    riskReward: number
     tradeDate: Date
+    outcome: 'WIN' | 'LOSS' | 'BE'
+    riskAmount: number
+    mainRR: number | null
+    partials: Array<{ sizeFraction: number; rr: number }>
   }) => {
     addTrade(journalId, data)
     setIsAddTradeModalOpen(false)
