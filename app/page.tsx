@@ -212,6 +212,9 @@ export default function Home() {
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
             <p>&copy; {new Date().getFullYear()} MyTraderJournal. All rights reserved.</p>
+            <p className="mt-2 text-gray-500 dark:text-gray-500">
+              Created by Kian and Elias
+            </p>
           </div>
         </div>
       </footer>
