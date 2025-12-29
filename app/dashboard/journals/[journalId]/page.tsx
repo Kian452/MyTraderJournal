@@ -109,6 +109,7 @@ export default function JournalDetailPage() {
     riskAmount: number
     mainRR: number | null
     partials: Array<{ sizeFraction: number; rr: number }>
+    thoughtProcess?: string | null
   }) => {
     try {
       setIsSaving(true)
@@ -128,6 +129,7 @@ export default function JournalDetailPage() {
           riskAmount: data.riskAmount,
           mainRR: data.mainRR,
           partials: partialsForAPI,
+          thoughtProcess: data.thoughtProcess || null,
         })
         
         // Update in state
@@ -143,6 +145,7 @@ export default function JournalDetailPage() {
           riskAmount: data.riskAmount,
           mainRR: data.mainRR,
           partials: partialsForAPI,
+          thoughtProcess: data.thoughtProcess || null,
         })
         
         // Add to state

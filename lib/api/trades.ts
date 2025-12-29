@@ -21,6 +21,7 @@ export interface Trade {
   partials: TradePartial[]
   profitLoss: number
   rMultiple: number
+  thoughtProcess?: string | null
   createdAt: string | Date
 }
 
@@ -30,6 +31,7 @@ export interface CreateTradeInput {
   riskAmount: number
   mainRR?: number | null
   partials?: Array<{ percentage: number; rr: number }>
+  thoughtProcess?: string | null
 }
 
 export interface UpdateTradeInput extends CreateTradeInput {}

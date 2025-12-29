@@ -72,17 +72,18 @@ enum TradeOutcome {
 }
 
 model Trade {
-  id         String       @id @default(uuid())
-  journalId  String       @map("journal_id")
-  tradeDate  DateTime     @map("trade_date") // Date of the trade (can be historical)
-  outcome    TradeOutcome // WIN, LOSS, or BE
-  riskAmount Float        @map("risk_amount") // Amount risked on this trade
-  mainRR     Float?       @map("main_rr") // Main risk-reward ratio (nullable if partials sum to 100%)
-  profitLoss Float        @map("profit_loss") // Computed: profit or loss amount
-  rMultiple  Float        @map("r_multiple") // Computed: profitLoss / riskAmount
-  isWin      Boolean      @map("is_win") // Computed: derived from profitLoss > 0
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime     @updatedAt @map("updated_at")
+  id            String       @id @default(uuid())
+  journalId     String       @map("journal_id")
+  tradeDate     DateTime     @map("trade_date") // Date of the trade (can be historical)
+  outcome       TradeOutcome // WIN, LOSS, or BE
+  riskAmount    Float        @map("risk_amount") // Amount risked on this trade
+  mainRR        Float?       @map("main_rr") // Main risk-reward ratio (nullable if partials sum to 100%)
+  profitLoss    Float        @map("profit_loss") // Computed: profit or loss amount
+  rMultiple     Float        @map("r_multiple") // Computed: profitLoss / riskAmount
+  isWin         Boolean      @map("is_win") // Computed: derived from profitLoss > 0
+  thoughtProcess String?     @map("thought_process") // Optional: user's thought process/reasoning for the trade
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
 
   // Relations
   journal         Journal               @relation(fields: [journalId], references: [id], onDelete: Cascade)

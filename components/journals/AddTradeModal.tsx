@@ -13,6 +13,7 @@ interface AddTradeModalProps {
     riskAmount: number
     mainRR: number | null
     partials: TradePartial[]
+    thoughtProcess?: string | null
   }) => void
   mode?: 'add' | 'edit'
   initialTrade?: Trade
@@ -60,6 +61,7 @@ export default function AddTradeModal({
     outcome: 'WIN' as TradeOutcome,
     riskAmount: '',
     mainRR: '',
+    thoughtProcess: '',
   })
 
   const [partials, setPartials] = useState<Array<{ positionPercent: string; rr: string }>>([])
@@ -81,6 +83,7 @@ export default function AddTradeModal({
           outcome: initialTrade.outcome,
           riskAmount: initialTrade.riskAmount.toString(),
           mainRR: initialTrade.mainRR?.toString() || '',
+          thoughtProcess: initialTrade.thoughtProcess || '',
         })
         setPartials(
           initialTrade.partials.map((p) => ({
@@ -96,6 +99,7 @@ export default function AddTradeModal({
           outcome: 'WIN',
           riskAmount: '',
           mainRR: '',
+          thoughtProcess: '',
         })
         setPartials([])
         setShowPartials(false)
@@ -141,7 +145,7 @@ export default function AddTradeModal({
   }, [isOpen])
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -669,6 +673,31 @@ export default function AddTradeModal({
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Thought Process */}
+            {settings.thoughts && (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Thought Process</h3>
+                <div>
+                  <label htmlFor="thoughtProcess" className="sr-only">
+                    Thought Process
+                  </label>
+                  <textarea
+                    id="thoughtProcess"
+                    name="thoughtProcess"
+                    value={formData.thoughtProcess}
+                    onChange={handleChange}
+                    rows={4}
+                    className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-colors resize-y"
+                    placeholder="What were you thinking before and during this trade?"
+                    aria-label="Thought Process"
+                  />
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    Optional: Document your reasoning and thought process for this trade
+                  </p>
                 </div>
               </div>
             )}

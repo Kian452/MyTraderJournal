@@ -12,6 +12,7 @@ export interface TradeInput {
   riskAmount: number
   mainRR?: number | null
   partials?: Array<{ percentage: number; rr: number }>
+  thoughtProcess?: string | null
 }
 
 export interface TradePartialInput {

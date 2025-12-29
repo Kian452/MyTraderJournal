@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Trade } from '@/lib/api/trades'
 
 interface TradesTableProps {
@@ -19,6 +20,7 @@ export default function TradesTable({
   onEdit,
   onDelete,
 }: TradesTableProps) {
+  const [expandedTradeId, setExpandedTradeId] = useState<string | null>(null)
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -94,88 +96,109 @@ export default function TradesTable({
                 : 'text-gray-400'
 
             return (
-              <tr
-                key={trade.id}
-                className={`border-b border-gray-800 hover:bg-gray-800/30 transition-colors ${
-                  trade.outcome === 'WIN'
-                    ? 'bg-green-500/5'
-                    : trade.outcome === 'LOSS'
-                    ? 'bg-red-500/5'
-                    : ''
-                }`}
-              >
-                <td className="py-3 px-4 text-sm text-gray-300">
-                  {formatDate(trade.tradeDate)}
-                </td>
-                <td className="py-3 px-4 text-sm text-center">
-                  {getOutcomeBadge(trade.outcome)}
-                </td>
-                <td className="py-3 px-4 text-sm text-right text-gray-300">
-                  {formatCurrency(trade.riskAmount)}
-                </td>
-                <td className="py-3 px-4 text-sm text-right text-gray-300 font-medium">
-                  {trade.rMultiple.toFixed(2)}R
-                </td>
-                <td className={`py-3 px-4 text-sm text-right font-medium ${plStyle}`}>
-                  {formatCurrency(trade.profitLoss)}
-                </td>
-                {(onEdit || onDelete) && (
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex justify-end items-center space-x-2">
-                      {onEdit && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onEdit(trade)
-                          }}
-                          className="text-gray-400 hover:text-blue-400 transition-colors p-1"
-                          aria-label={`Edit trade from ${formatDate(trade.tradeDate)}`}
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onDelete(trade.id)
-                          }}
-                          className="text-gray-400 hover:text-red-400 transition-colors p-1"
-                          aria-label={`Delete trade from ${formatDate(trade.tradeDate)}`}
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+              <>
+                <tr
+                  key={trade.id}
+                  className={`border-b border-gray-800 hover:bg-gray-800/30 transition-colors cursor-pointer ${
+                    trade.outcome === 'WIN'
+                      ? 'bg-green-500/5'
+                      : trade.outcome === 'LOSS'
+                      ? 'bg-red-500/5'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    if (trade.thoughtProcess) {
+                      setExpandedTradeId(expandedTradeId === trade.id ? null : trade.id)
+                    }
+                  }}
+                >
+                  <td className="py-3 px-4 text-sm text-gray-300">
+                    {formatDate(trade.tradeDate)}
                   </td>
+                  <td className="py-3 px-4 text-sm text-center">
+                    {getOutcomeBadge(trade.outcome)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-300">
+                    {formatCurrency(trade.riskAmount)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-gray-300 font-medium">
+                    {trade.rMultiple.toFixed(2)}R
+                  </td>
+                  <td className={`py-3 px-4 text-sm text-right font-medium ${plStyle}`}>
+                    {formatCurrency(trade.profitLoss)}
+                  </td>
+                  {(onEdit || onDelete) && (
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end items-center space-x-2">
+                        {onEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEdit(trade)
+                            }}
+                            className="text-gray-400 hover:text-blue-400 transition-colors p-1"
+                            aria-label={`Edit trade from ${formatDate(trade.tradeDate)}`}
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDelete(trade.id)
+                            }}
+                            className="text-gray-400 hover:text-red-400 transition-colors p-1"
+                            aria-label={`Delete trade from ${formatDate(trade.tradeDate)}`}
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+                {expandedTradeId === trade.id && trade.thoughtProcess && (
+                  <tr key={`${trade.id}-detail`} className="bg-gray-800/50 border-b border-gray-700">
+                    <td colSpan={(onEdit || onDelete) ? 6 : 5} className="py-4 px-4">
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                          Thought Process
+                        </h4>
+                        <p className="text-sm text-gray-300 whitespace-pre-wrap">
+                          {trade.thoughtProcess}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </tr>
+              </>
             )
           })}
         </tbody>

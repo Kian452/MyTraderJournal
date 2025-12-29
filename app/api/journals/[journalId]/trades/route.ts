@@ -67,6 +67,7 @@ export async function GET(
       })),
       profitLoss: trade.profitLoss,
       rMultiple: trade.rMultiple,
+      thoughtProcess: trade.thoughtProcess || null,
       createdAt: trade.createdAt.toISOString(),
     }))
 
@@ -122,6 +123,7 @@ export async function POST(
       riskAmount: body.riskAmount,
       mainRR: body.mainRR ?? null,
       partials: body.partials || [],
+      thoughtProcess: body.thoughtProcess || null,
     }
 
     // Validate input
@@ -147,6 +149,7 @@ export async function POST(
           outcome: tradeInput.outcome,
           riskAmount: tradeInput.riskAmount,
           mainRR: tradeInput.mainRR,
+          thoughtProcess: tradeInput.thoughtProcess || null,
           profitLoss: metrics.profitLoss,
           rMultiple: metrics.rMultiple,
           isWin: metrics.isWin,
@@ -198,6 +201,7 @@ export async function POST(
       })),
       profitLoss: result.profitLoss,
       rMultiple: result.rMultiple,
+      thoughtProcess: result.thoughtProcess || null,
       createdAt: result.createdAt.toISOString(),
     }
 
