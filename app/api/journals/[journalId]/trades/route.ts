@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { validateTradeInput, computeTradeMetrics, prepareTradeForComputation } from '@/lib/api/tradeHelpers'
+import { validateTradeInput, computeTradeMetrics, type TradeInput, type TradePartialInput } from '@/lib/api/tradeHelpers'
 
 /**
  * GET /api/journals/[journalId]/trades
@@ -116,7 +116,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const tradeInput = {
+    const tradeInput: TradeInput = {
       tradeDate: body.tradeDate ? new Date(body.tradeDate) : new Date(),
       outcome: body.outcome,
       riskAmount: body.riskAmount,
@@ -151,7 +151,7 @@ export async function POST(
           rMultiple: metrics.rMultiple,
           isWin: metrics.isWin,
           partials: {
-            create: tradeInput.partials.map((p) => ({
+            create: (tradeInput.partials ?? []).map((p: TradePartialInput) => ({
               percentage: p.percentage,
               rr: p.rr,
             })),
@@ -170,7 +170,7 @@ export async function POST(
         select: { profitLoss: true },
       })
 
-      const totalPL = allTrades.reduce((sum, t) => sum + t.profitLoss, 0)
+      const totalPL = allTrades.reduce((sum: number, t: { profitLoss: number }) => sum + t.profitLoss, 0)
       const tradesCount = allTrades.length
 
       await tx.journal.update({

@@ -20,7 +20,7 @@ export default function JournalCard({ journal, onDelete }: JournalCardProps) {
     }).format(amount)
   }
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',

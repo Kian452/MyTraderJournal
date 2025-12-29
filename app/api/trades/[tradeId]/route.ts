@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { validateTradeInput, computeTradeMetrics } from '@/lib/api/tradeHelpers'
+import { validateTradeInput, computeTradeMetrics, type TradeInput, type TradePartialInput } from '@/lib/api/tradeHelpers'
 
 /**
  * PUT /api/trades/[tradeId]
@@ -44,7 +44,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const tradeInput = {
+    const tradeInput: TradeInput = {
       tradeDate: body.tradeDate ? new Date(body.tradeDate) : trade.tradeDate,
       outcome: body.outcome,
       riskAmount: body.riskAmount,
@@ -84,7 +84,7 @@ export async function PUT(
           rMultiple: metrics.rMultiple,
           isWin: metrics.isWin,
           partials: {
-            create: tradeInput.partials.map((p) => ({
+            create: (tradeInput.partials ?? []).map((p: TradePartialInput) => ({
               percentage: p.percentage,
               rr: p.rr,
             })),
@@ -103,7 +103,7 @@ export async function PUT(
         select: { profitLoss: true },
       })
 
-      const totalPL = allTrades.reduce((sum, t) => sum + t.profitLoss, 0)
+      const totalPL = allTrades.reduce((sum: number, t: { profitLoss: number }) => sum + t.profitLoss, 0)
       const tradesCount = allTrades.length
 
       await tx.journal.update({
@@ -125,7 +125,7 @@ export async function PUT(
       outcome: result.outcome,
       riskAmount: result.riskAmount,
       mainRR: result.mainRR,
-      partials: result.partials.map((p) => ({
+      partials: (result.partials || []).map((p: any) => ({
         sizeFraction: p.percentage / 100,
         rr: p.rr,
       })),
@@ -197,7 +197,7 @@ export async function DELETE(
         select: { profitLoss: true },
       })
 
-      const totalPL = allTrades.reduce((sum, t) => sum + t.profitLoss, 0)
+      const totalPL = allTrades.reduce((sum: number, t: { profitLoss: number }) => sum + t.profitLoss, 0)
       const tradesCount = allTrades.length
 
       await tx.journal.update({

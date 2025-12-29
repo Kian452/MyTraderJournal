@@ -25,7 +25,8 @@ export async function GET() {
     })
 
     // Transform to match frontend interface
-    const response = journals.map((journal) => ({
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    const response = journals.map((journal: any) => ({
       id: journal.id,
       name: journal.name,
       startingCapital: journal.startingCapital,
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create journal
-    const journal = await prisma.journal.create({
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    const journal = await (prisma.journal.create as any)({
       data: {
         userId: session.user.id,
         name: name.trim(),
@@ -116,14 +118,16 @@ export async function POST(request: NextRequest) {
     })
 
     // Transform response
+    // Note: TypeScript types may be out of sync until Prisma client is regenerated
+    const journalData = journal as any
     const response = {
       id: journal.id,
       name: journal.name,
       startingCapital: journal.startingCapital,
       currentCapital: journal.currentCapital,
-      currency: journal.currency || 'USD',
-      tradesCount: journal.tradesCount ?? 0,
-      updatedAt: journal.updatedAt || journal.createdAt,
+      currency: journalData.currency || 'USD',
+      tradesCount: journalData.tradesCount ?? 0,
+      updatedAt: journalData.updatedAt || journal.createdAt,
       createdAt: journal.createdAt,
     }
 
