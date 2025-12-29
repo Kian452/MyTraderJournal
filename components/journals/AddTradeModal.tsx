@@ -2,36 +2,35 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-interface CreateJournalModalProps {
+interface AddTradeModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: { name: string; startingCapital: number; currency: Currency }) => void
-}
-
-type Currency = 'USD' | 'EUR'
-
-interface JournalFormData {
-  name: string
-  startingCapital: string
-  currency: Currency
+  onSubmit: (data: {
+    profitLoss: number
+    riskReward: number
+    tradeDate: Date
+  }) => void
 }
 
 /**
- * Modal for creating a new journal
- * TODO: Connect to API when backend is ready
+ * Modal for adding a new trade
  */
-export default function CreateJournalModal({
+export default function AddTradeModal({
   isOpen,
   onClose,
   onSubmit,
-}: CreateJournalModalProps) {
-  const [formData, setFormData] = useState<JournalFormData>({
-    name: '',
-    startingCapital: '',
-    currency: 'USD',
+}: AddTradeModalProps) {
+  const [formData, setFormData] = useState({
+    profitLoss: '',
+    riskReward: '',
+    tradeDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
   })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof JournalFormData, string>>>({})
+  const [errors, setErrors] = useState<{
+    profitLoss?: string
+    riskReward?: string
+  }>({})
+
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Handle ESC key
@@ -71,19 +70,27 @@ export default function CreateJournalModal({
     }
   }, [isOpen])
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target
-    const checked = (e.target as HTMLInputElement).checked
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        profitLoss: '',
+        riskReward: '',
+        tradeDate: new Date().toISOString().split('T')[0],
+      })
+      setErrors({})
+    }
+  }, [isOpen])
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }))
 
     // Clear error for this field
-    if (errors[name as keyof JournalFormData]) {
+    if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({
         ...prev,
         [name]: undefined,
@@ -92,20 +99,23 @@ export default function CreateJournalModal({
   }
 
   const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof JournalFormData, string>> = {}
+    const newErrors: typeof errors = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters'
+    if (!formData.profitLoss.trim()) {
+      newErrors.profitLoss = 'Profit/Loss is required'
+    } else {
+      const pl = parseFloat(formData.profitLoss)
+      if (isNaN(pl)) {
+        newErrors.profitLoss = 'Profit/Loss must be a number'
+      }
     }
 
-    if (!formData.startingCapital.trim()) {
-      newErrors.startingCapital = 'Starting capital is required'
+    if (!formData.riskReward.trim()) {
+      newErrors.riskReward = 'Risk-Reward is required'
     } else {
-      const capital = parseFloat(formData.startingCapital)
-      if (isNaN(capital) || capital <= 0) {
-        newErrors.startingCapital = 'Starting capital must be greater than 0'
+      const rr = parseFloat(formData.riskReward)
+      if (isNaN(rr) || rr <= 0) {
+        newErrors.riskReward = 'Risk-Reward must be greater than 0'
       }
     }
 
@@ -113,14 +123,15 @@ export default function CreateJournalModal({
     return Object.keys(newErrors).length === 0
   }
 
-  // Check if form is valid for button state
   const isFormValid = (): boolean => {
-    const capital = parseFloat(formData.startingCapital)
+    const pl = parseFloat(formData.profitLoss)
+    const rr = parseFloat(formData.riskReward)
     return (
-      formData.name.trim().length >= 2 &&
-      formData.startingCapital.trim() !== '' &&
-      !isNaN(capital) &&
-      capital > 0
+      !isNaN(pl) &&
+      !isNaN(rr) &&
+      rr > 0 &&
+      formData.profitLoss.trim() !== '' &&
+      formData.riskReward.trim() !== ''
     )
   }
 
@@ -131,34 +142,14 @@ export default function CreateJournalModal({
       return
     }
 
-    // Call parent callback with form data
     onSubmit({
-      name: formData.name.trim(),
-      startingCapital: parseFloat(formData.startingCapital),
-      currency: formData.currency,
+      profitLoss: parseFloat(formData.profitLoss),
+      riskReward: parseFloat(formData.riskReward),
+      tradeDate: new Date(formData.tradeDate),
     })
 
-    // Reset form and close modal
-    setFormData({
-      name: '',
-      startingCapital: '',
-      currency: 'USD',
-    })
-    setErrors({})
     onClose()
   }
-
-  // Reset form when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        name: '',
-        startingCapital: '',
-        currency: 'USD',
-      })
-      setErrors({})
-    }
-  }, [isOpen])
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -180,80 +171,81 @@ export default function CreateJournalModal({
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-700">
-          <h2 className="text-xl font-semibold text-white">Create Journal</h2>
+          <h2 className="text-xl font-semibold text-white">Add Trade</h2>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-4">
           <div className="space-y-4">
-            {/* Name */}
+            {/* Profit/Loss */}
             <div>
               <label
-                htmlFor="name"
+                htmlFor="profitLoss"
                 className="block text-sm font-medium text-gray-300 mb-1"
               >
-                Name <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Forex Trading Journal"
-                required
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-400">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Starting Capital */}
-            <div>
-              <label
-                htmlFor="startingCapital"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
-                Starting Capital <span className="text-red-400">*</span>
+                Profit/Loss <span className="text-red-400">*</span>
               </label>
               <input
                 type="number"
-                id="startingCapital"
-                name="startingCapital"
-                value={formData.startingCapital}
+                id="profitLoss"
+                name="profitLoss"
+                value={formData.profitLoss}
                 onChange={handleChange}
                 step="0.01"
-                min="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="10000"
+                placeholder="150.50 or -75.25"
                 required
               />
-              {errors.startingCapital && (
-                <p className="mt-1 text-sm text-red-400">
-                  {errors.startingCapital}
-                </p>
+              {errors.profitLoss && (
+                <p className="mt-1 text-sm text-red-400">{errors.profitLoss}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Enter positive for profit, negative for loss
+              </p>
+            </div>
+
+            {/* Risk-Reward */}
+            <div>
+              <label
+                htmlFor="riskReward"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
+                Risk-Reward <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="number"
+                id="riskReward"
+                name="riskReward"
+                value={formData.riskReward}
+                onChange={handleChange}
+                step="0.01"
+                min="0.01"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="2.5"
+                required
+              />
+              {errors.riskReward && (
+                <p className="mt-1 text-sm text-red-400">{errors.riskReward}</p>
               )}
             </div>
 
-            {/* Currency */}
+            {/* Date */}
             <div>
               <label
-                htmlFor="currency"
+                htmlFor="tradeDate"
                 className="block text-sm font-medium text-gray-300 mb-1"
               >
-                Currency
+                Date
               </label>
-              <select
-                id="currency"
-                name="currency"
-                value={formData.currency}
+              <input
+                type="date"
+                id="tradeDate"
+                name="tradeDate"
+                value={formData.tradeDate}
                 onChange={handleChange}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
+                required
+              />
             </div>
           </div>
 
@@ -271,7 +263,7 @@ export default function CreateJournalModal({
               disabled={!isFormValid()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create
+              Save
             </button>
           </div>
         </form>

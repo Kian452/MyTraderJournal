@@ -1,18 +1,15 @@
 /**
  * Empty state component for when there are no journals
+ * Note: No action button - create button is in header only
  */
 interface EmptyStateProps {
   title: string
   description: string
-  actionLabel: string
-  onAction: () => void
 }
 
 export default function EmptyState({
   title,
   description,
-  actionLabel,
-  onAction,
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -40,17 +37,9 @@ export default function EmptyState({
       </h2>
 
       {/* Supporting Text */}
-      <p className="text-gray-400 mb-8 text-center max-w-md">
+      <p className="text-gray-400 text-center max-w-md">
         {description}
       </p>
-
-      {/* Action Button */}
-      <button
-        onClick={onAction}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors"
-      >
-        {actionLabel}
-      </button>
     </div>
   )
 }

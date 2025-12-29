@@ -1,37 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getMockJournals, Journal } from '@/lib/mockJournals'
+import { useStore } from '@/lib/useStore'
+import { createJournal, deleteJournal, Currency } from '@/lib/store'
 import JournalCard from '@/components/dashboard/JournalCard'
 import EmptyState from '@/components/dashboard/EmptyState'
 import CreateJournalModal from '@/components/dashboard/CreateJournalModal'
+import ConfirmDialog from '@/components/dashboard/ConfirmDialog'
+import { useState } from 'react'
 
 /**
  * Journals page
  * Displays all journals in a grid or empty state
  */
 export default function JournalsPage() {
-  const [journals, setJournals] = useState<Journal[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { journals } = useStore()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [deleteJournalId, setDeleteJournalId] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Load mock journals
-    setJournals(getMockJournals())
+  const handleCreateJournal = (data: {
+    name: string
+    startingCapital: number
+    currency: Currency
+  }) => {
+    createJournal(data)
+    setIsCreateModalOpen(false)
+  }
 
-    // Listen for custom event to open modal from header button
-    const handleOpenModal = () => {
-      setIsModalOpen(true)
-    }
+  const handleDeleteJournal = (journalId: string) => {
+    setDeleteJournalId(journalId)
+  }
 
-    window.addEventListener('openCreateJournalModal', handleOpenModal)
-
-    return () => {
-      window.removeEventListener('openCreateJournalModal', handleOpenModal)
-    }
-  }, [])
-
-  const handleCreateJournal = () => {
-    setIsModalOpen(true)
+  const confirmDelete = () => {
+    if (!deleteJournalId) return
+    deleteJournal(deleteJournalId)
+    setDeleteJournalId(null)
   }
 
   return (
@@ -45,7 +47,7 @@ export default function JournalsPage() {
           </p>
         </div>
         <button
-          onClick={handleCreateJournal}
+          onClick={() => setIsCreateModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
         >
           + New Journal
@@ -57,23 +59,37 @@ export default function JournalsPage() {
         <EmptyState
           title="You don't have any journals yet"
           description="Create a journal to track trades, refine your strategy, and analyze performance."
-          actionLabel="+ Create journal"
-          onAction={handleCreateJournal}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {journals.map((journal) => (
-            <JournalCard key={journal.id} journal={journal} />
+            <JournalCard
+              key={journal.id}
+              journal={journal}
+              onDelete={handleDeleteJournal}
+            />
           ))}
         </div>
       )}
 
       {/* Create Journal Modal */}
       <CreateJournalModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateJournal}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteJournalId !== null}
+        onClose={() => setDeleteJournalId(null)}
+        onConfirm={confirmDelete}
+        title="Delete journal?"
+        message="This will permanently delete the journal and its trades."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmVariant="danger"
       />
     </div>
   )
 }
-

@@ -1,76 +1,141 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { getMockJournal } from '@/lib/mockJournals'
+import Link from 'next/link'
+import { useJournal, useTrades } from '@/lib/useStore'
+import { addTrade } from '@/lib/store'
+import JournalTabs from '@/components/journals/JournalTabs'
+import TradesTable from '@/components/journals/TradesTable'
+import JournalStats from '@/components/journals/JournalStats'
+import AddTradeModal from '@/components/journals/AddTradeModal'
+import EmptyState from '@/components/dashboard/EmptyState'
 
 /**
  * Journal detail page
- * TODO: Add trades list and data views
+ * Shows journal header, tabs (Trades/Data), and content
  */
 export default function JournalDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const journalId = params.journalId as string
   const [activeTab, setActiveTab] = useState<'trades' | 'data'>('trades')
+  const [isAddTradeModalOpen, setIsAddTradeModalOpen] = useState(false)
 
-  const journal = getMockJournal(journalId)
+  const journal = useJournal(journalId)
+  const trades = useTrades(journalId)
 
   if (!journal) {
     return (
       <div>
+        <Link
+          href="/dashboard/journals"
+          className="text-blue-400 hover:text-blue-300 mb-4 inline-block"
+        >
+          ← Back to Journals
+        </Link>
         <h1 className="text-3xl font-bold text-white mb-2">Journal Not Found</h1>
-        <p className="text-gray-400">The journal you're looking for doesn't exist.</p>
+        <p className="text-gray-400">
+          The journal you're looking for doesn't exist.
+        </p>
       </div>
     )
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: journal.currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const handleAddTrade = (data: {
+    profitLoss: number
+    riskReward: number
+    tradeDate: Date
+  }) => {
+    addTrade(journalId, data)
+    setIsAddTradeModalOpen(false)
+  }
+
   return (
     <div>
-      {/* Header */}
+      {/* Back Link */}
+      <Link
+        href="/dashboard/journals"
+        className="text-blue-400 hover:text-blue-300 mb-6 inline-block"
+      >
+        ← Back to Journals
+      </Link>
+
+      {/* Journal Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">{journal.name}</h1>
-        <p className="text-gray-400">Journal ID: {journalId}</p>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">{journal.name}</h1>
+            <div className="flex items-center space-x-6 text-sm text-gray-400">
+              <div>
+                <span className="text-gray-500">Current Capital: </span>
+                <span className="text-white font-semibold text-lg">
+                  {formatCurrency(journal.currentCapital)}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Starting Capital: </span>
+                <span className="text-gray-300">
+                  {formatCurrency(journal.startingCapital)}
+                </span>
+              </div>
+            </div>
+          </div>
+          {activeTab === 'trades' && (
+            <button
+              onClick={() => setIsAddTradeModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Add Trade
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 mb-6 border-b border-gray-700">
-        <button
-          onClick={() => setActiveTab('trades')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'trades'
-              ? 'text-white border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          Trades
-        </button>
-        <button
-          onClick={() => setActiveTab('data')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'data'
-              ? 'text-white border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          Data
-        </button>
-      </div>
+      <JournalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
         {activeTab === 'trades' ? (
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">Trades</h2>
-            <p className="text-gray-400">Trades list will appear here.</p>
+            {trades.length === 0 ? (
+              <EmptyState
+                title="No trades yet"
+                description="Add your first trade to start tracking your performance."
+              />
+            ) : (
+              <TradesTable trades={trades} currency={journal.currency} />
+            )}
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">Data</h2>
-            <p className="text-gray-400">Journal data view will appear here.</p>
+            <h2 className="text-xl font-semibold text-white mb-6">Analytics</h2>
+            <JournalStats
+              trades={trades}
+              startingCapital={journal.startingCapital}
+              currentCapital={journal.currentCapital}
+              currency={journal.currency}
+            />
           </div>
         )}
       </div>
+
+      {/* Add Trade Modal */}
+      <AddTradeModal
+        isOpen={isAddTradeModalOpen}
+        onClose={() => setIsAddTradeModalOpen(false)}
+        onSubmit={handleAddTrade}
+      />
     </div>
   )
 }
-

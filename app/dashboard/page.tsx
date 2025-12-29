@@ -1,32 +1,9 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 /**
  * Dashboard landing page
- * TODO: Add trading journal overview
- * TODO: Add recent trades widget
- * TODO: Add statistics dashboard
+ * Redirects to journals page
  */
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    redirect('/auth/login')
-  }
-
-  return (
-    <div>
-      <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-      <p className="text-gray-400 mb-8">
-        Welcome back, {session.user?.name || session.user?.email}!
-      </p>
-
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-        <p className="text-gray-400">
-          Dashboard overview will appear here.
-        </p>
-      </div>
-    </div>
-  )
+export default function DashboardPage() {
+  redirect('/dashboard/journals')
 }
