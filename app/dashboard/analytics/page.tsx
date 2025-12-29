@@ -3,12 +3,10 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 /**
- * Dashboard landing page
- * TODO: Add trading journal overview
- * TODO: Add recent trades widget
- * TODO: Add statistics dashboard
+ * Analytics page
+ * TODO: Add analytics charts and insights
  */
-export default async function DashboardPage() {
+export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions)
 
   if (!session) {
@@ -17,16 +15,17 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-white mb-2">Analytics</h1>
       <p className="text-gray-400 mb-8">
-        Welcome back, {session.user?.name || session.user?.email}!
+        View detailed analytics and insights
       </p>
 
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
         <p className="text-gray-400">
-          Dashboard overview will appear here.
+          Analytics dashboard will appear here.
         </p>
       </div>
     </div>
   )
 }
+

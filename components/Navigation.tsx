@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 
 /**
  * Global navigation component
+ * Hidden on dashboard routes (dashboard has its own navigation)
  * 
  * TODO: Add mobile menu
  * TODO: Add user dropdown menu
@@ -13,6 +15,12 @@ import { useSession, signOut } from 'next-auth/react'
  */
 export default function Navigation() {
   const { data: session, status } = useSession()
+  const pathname = usePathname()
+
+  // Hide navigation on dashboard routes
+  if (pathname?.startsWith('/dashboard')) {
+    return null
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
