@@ -7,3 +7,5 @@ export type Currency = 'USD' | 'EUR'
 
 export type TradeOutcome = 'WIN' | 'LOSS' | 'BE'
 
+
+

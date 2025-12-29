@@ -92,6 +92,11 @@ export default function ConfirmDialog({
         {/* Message */}
         <div className="px-6 py-4">
           <p className="text-gray-300">{message}</p>
+          {confirmVariant === 'danger' && (
+            <p className="mt-2 text-sm text-gray-400">
+              This action cannot be undone.
+            </p>
+          )}
         </div>
 
         {/* Actions */}
@@ -122,4 +127,6 @@ export default function ConfirmDialog({
     </div>
   )
 }
+
+
 

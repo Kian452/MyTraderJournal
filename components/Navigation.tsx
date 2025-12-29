@@ -38,16 +38,16 @@ export default function Navigation() {
             ) : session ? (
               <>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard/journals"
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  Dashboard
+                  Journals
                 </Link>
                 <span className="text-gray-500 text-sm">
                   {session.user?.email}
                 </span>
                 <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                  onClick={() => signOut({ callbackUrl: '/auth/login' })}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                 >
                   Sign Out

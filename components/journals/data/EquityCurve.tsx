@@ -74,3 +74,5 @@ export default function EquityCurve({ data, currency }: EquityCurveProps) {
   )
 }
 
+
+

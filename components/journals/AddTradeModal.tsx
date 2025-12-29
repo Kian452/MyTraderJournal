@@ -17,6 +17,8 @@ interface AddTradeModalProps {
   mode?: 'add' | 'edit'
   initialTrade?: Trade
   currency?: string
+  journalId?: string
+  isSubmitting?: boolean
 }
 
 /**
@@ -31,7 +33,28 @@ export default function AddTradeModal({
   mode = 'add',
   initialTrade,
   currency = 'USD',
+  journalId,
+  isSubmitting = false,
 }: AddTradeModalProps) {
+  // Load settings from localStorage
+  const [settings, setSettings] = useState({
+    confidenceLevel: true,
+    image: true,
+    thoughts: true,
+  })
+
+  useEffect(() => {
+    if (journalId) {
+      const saved = localStorage.getItem(`journal_settings_${journalId}`)
+      if (saved) {
+        try {
+          setSettings(JSON.parse(saved))
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+    }
+  }, [journalId])
   const [formData, setFormData] = useState({
     tradeDate: new Date().toISOString().split('T')[0],
     outcome: 'WIN' as TradeOutcome,
@@ -663,10 +686,16 @@ export default function AddTradeModal({
             </button>
             <button
               type="submit"
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || isSubmitting}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {mode === 'edit' ? 'Save Changes' : 'Save'}
+              {isSubmitting
+                ? mode === 'edit'
+                  ? 'Updating...'
+                  : 'Adding...'
+                : mode === 'edit'
+                ? 'Save Changes'
+                : 'Save'}
             </button>
           </div>
         </form>

@@ -8,9 +8,11 @@ import { fetchTrades, createTrade, updateTrade, deleteTrade, type Trade } from '
 import JournalTabs from '@/components/journals/JournalTabs'
 import TradesTable from '@/components/journals/TradesTable'
 import JournalStats from '@/components/journals/JournalStats'
+import JournalSettings from '@/components/journals/JournalSettings'
 import AddTradeModal from '@/components/journals/AddTradeModal'
 import ConfirmDialog from '@/components/dashboard/ConfirmDialog'
 import EmptyState from '@/components/dashboard/EmptyState'
+import { useToast } from '@/components/ui/ToastContainer'
 import type { Journal } from '@/lib/api/journals'
 
 /**
@@ -19,9 +21,10 @@ import type { Journal } from '@/lib/api/journals'
  * Now uses API instead of in-memory store
  */
 export default function JournalDetailPage() {
+  const { showToast } = useToast()
   const params = useParams()
   const journalId = params.journalId as string
-  const [activeTab, setActiveTab] = useState<'trades' | 'data'>('trades')
+  const [activeTab, setActiveTab] = useState<'trades' | 'data' | 'settings'>('trades')
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false)
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null)
   const [deleteTradeId, setDeleteTradeId] = useState<string | null>(null)
@@ -32,6 +35,7 @@ export default function JournalDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
@@ -107,6 +111,7 @@ export default function JournalDetailPage() {
     partials: Array<{ sizeFraction: number; rr: number }>
   }) => {
     try {
+      setIsSaving(true)
       setError(null)
       
       // Convert partials from sizeFraction to percentage for API
@@ -129,6 +134,7 @@ export default function JournalDetailPage() {
         setTrades((prev) =>
           prev.map((t) => (t.id === updatedTrade.id ? updatedTrade : t))
         )
+        showToast('Trade updated successfully', 'success')
       } else {
         // Create new trade
         const newTrade = await createTrade(journalId, {
@@ -141,6 +147,7 @@ export default function JournalDetailPage() {
         
         // Add to state
         setTrades((prev) => [newTrade, ...prev])
+        showToast('Trade added successfully', 'success')
       }
       
       // Reload journal to get updated aggregates
@@ -155,9 +162,16 @@ export default function JournalDetailPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save trade'
       setError(errorMessage)
+      showToast(errorMessage, 'error')
       console.error('Error saving trade:', err)
+    } finally {
+      setIsSaving(false)
     }
   }
+
+  const handleRetry = useCallback(() => {
+    loadData()
+  }, [loadData])
 
   if (isLoading) {
     return (
@@ -169,6 +183,7 @@ export default function JournalDetailPage() {
           ← Back to Journals
         </Link>
         <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
           <p className="text-gray-400">Loading journal...</p>
         </div>
       </div>
@@ -229,13 +244,29 @@ export default function JournalDetailPage() {
       {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-md text-red-400">
-          {error}
-          <button
-            onClick={() => setError(null)}
-            className="ml-2 text-red-300 hover:text-red-200"
-          >
-            ×
-          </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">{error}</p>
+              <p className="text-sm text-red-300 mt-1">
+                Please check your connection and try again.
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleRetry}
+                className="px-3 py-1 text-sm bg-red-500/30 hover:bg-red-500/40 rounded transition-colors"
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-300 hover:text-red-200"
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -281,6 +312,8 @@ export default function JournalDetailPage() {
               <EmptyState
                 title="No trades yet"
                 description="Add your first trade to start tracking your performance."
+                actionLabel="Add Trade"
+                onAction={handleAddTrade}
               />
             ) : (
               <TradesTable
@@ -295,7 +328,7 @@ export default function JournalDetailPage() {
               />
             )}
           </div>
-        ) : (
+        ) : activeTab === 'data' ? (
           <div>
             <h2 className="text-xl font-semibold text-white mb-6">Analytics</h2>
             <JournalStats
@@ -309,6 +342,11 @@ export default function JournalDetailPage() {
               currency={journal.currency}
             />
           </div>
+        ) : (
+          <div>
+            <h2 className="text-xl font-semibold text-white mb-6">Settings</h2>
+            <JournalSettings journalId={journalId} />
+          </div>
         )}
       </div>
 
@@ -316,8 +354,10 @@ export default function JournalDetailPage() {
       <AddTradeModal
         isOpen={isTradeModalOpen}
         onClose={() => {
-          setIsTradeModalOpen(false)
-          setEditingTrade(null)
+          if (!isSaving) {
+            setIsTradeModalOpen(false)
+            setEditingTrade(null)
+          }
         }}
         onSubmit={handleTradeSubmit}
         mode={editingTrade ? 'edit' : 'add'}
@@ -327,6 +367,8 @@ export default function JournalDetailPage() {
           createdAt: new Date(editingTrade.createdAt),
         } : undefined}
         currency={journal.currency}
+        journalId={journalId}
+        isSubmitting={isSaving}
       />
 
       {/* Delete Confirmation Dialog */}

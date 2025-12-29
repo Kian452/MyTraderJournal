@@ -17,16 +17,17 @@ datasource db {
 // Used for authentication and as the root entity for all user data
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String    @map("password_hash")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String? // User's full name (optional for backward compatibility)
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
-  journals     Journal[]
+  journals Journal[]
 
-  @@map("users")
   @@index([email])
+  @@map("users")
 }
 
 // ============================================================================
@@ -37,24 +38,24 @@ model User {
 // Capital is updated after each trade to enable real-time analytics
 
 model Journal {
-  id             String    @id @default(uuid())
-  userId         String    @map("user_id")
-  name           String
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  name            String
   startingCapital Float    @map("starting_capital") // Initial capital when journal was created
-  currentCapital  Float    @map("current_capital")  // Updated after each trade
-  tradesCount    Int       @default(0) @map("trades_count") // Number of trades in this journal
-  currency       String    @default("USD") // Currency code (USD, EUR, etc.)
-  updatedAt      DateTime  @updatedAt @map("updated_at") // Automatically updated on changes
-  createdAt      DateTime  @default(now()) @map("created_at")
+  currentCapital  Float    @map("current_capital") // Updated after each trade
+  tradesCount     Int      @default(0) @map("trades_count") // Number of trades in this journal
+  currency        String   @default("USD") // Currency code (USD, EUR, etc.)
+  updatedAt       DateTime @updatedAt @map("updated_at") // Automatically updated on changes
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relations
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trades         Trade[]
-  attributes     JournalAttribute[]
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades     Trade[]
+  attributes JournalAttribute[]
 
-  @@map("journals")
   @@index([userId])
   @@index([userId, createdAt])
+  @@map("journals")
 }
 
 // ============================================================================
@@ -71,24 +72,23 @@ enum TradeOutcome {
 }
 
 model Trade {
-  id          String        @id @default(uuid())
-  journalId   String        @map("journal_id")
-  tradeDate   DateTime      @map("trade_date") // Date of the trade (can be historical)
-  outcome     TradeOutcome  // WIN, LOSS, or BE
-  riskAmount  Float         @map("risk_amount") // Amount risked on this trade
-  mainRR      Float?        @map("main_rr") // Main risk-reward ratio (nullable if partials sum to 100%)
-  profitLoss  Float         @map("profit_loss") // Computed: profit or loss amount
-  rMultiple   Float         @map("r_multiple") // Computed: profitLoss / riskAmount
-  isWin       Boolean       @map("is_win") // Computed: derived from profitLoss > 0
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
+  id         String       @id @default(uuid())
+  journalId  String       @map("journal_id")
+  tradeDate  DateTime     @map("trade_date") // Date of the trade (can be historical)
+  outcome    TradeOutcome // WIN, LOSS, or BE
+  riskAmount Float        @map("risk_amount") // Amount risked on this trade
+  mainRR     Float?       @map("main_rr") // Main risk-reward ratio (nullable if partials sum to 100%)
+  profitLoss Float        @map("profit_loss") // Computed: profit or loss amount
+  rMultiple  Float        @map("r_multiple") // Computed: profitLoss / riskAmount
+  isWin      Boolean      @map("is_win") // Computed: derived from profitLoss > 0
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
 
   // Relations
-  journal     Journal       @relation(fields: [journalId], references: [id], onDelete: Cascade)
-  partials    TradePartial[]
+  journal         Journal               @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  partials        TradePartial[]
   attributeValues TradeAttributeValue[]
 
-  @@map("trades")
   @@index([journalId])
   @@index([journalId, tradeDate])
   @@index([journalId, outcome])
@@ -96,6 +96,7 @@ model Trade {
   @@index([journalId, createdAt])
   // Composite index for common analytics queries (equity curve, calendar P&L)
   @@index([journalId, tradeDate, profitLoss])
+  @@map("trades")
 }
 
 // ============================================================================
@@ -105,17 +106,17 @@ model Trade {
 // Each partial represents a percentage of the position closed at a specific RR
 
 model TradePartial {
-  id          String    @id @default(uuid())
-  tradeId     String    @map("trade_id")
-  percentage  Float     // Position percentage (0-100)
-  rr          Float     // Risk-reward ratio for this partial (> 0)
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  tradeId    String   @map("trade_id")
+  percentage Float // Position percentage (0-100)
+  rr         Float // Risk-reward ratio for this partial (> 0)
+  createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations
-  trade       Trade     @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
 
-  @@map("trade_partials")
   @@index([tradeId])
+  @@map("trade_partials")
 }
 
 // ============================================================================
@@ -126,19 +127,19 @@ model TradePartial {
 // Examples: "Strategy", "Market Condition", "Screenshot", "Notes"
 
 model JournalAttribute {
-  id          String    @id @default(uuid())
-  journalId   String    @map("journal_id")
-  name        String    // Attribute name (e.g., "Strategy", "Market Condition")
-  type        AttributeType @default(TEXT) // Data type for the attribute
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id        String        @id @default(uuid())
+  journalId String        @map("journal_id")
+  name      String // Attribute name (e.g., "Strategy", "Market Condition")
+  type      AttributeType @default(TEXT) // Data type for the attribute
+  createdAt DateTime      @default(now()) @map("created_at")
 
   // Relations
-  journal     Journal   @relation(fields: [journalId], references: [id], onDelete: Cascade)
-  values      TradeAttributeValue[]
+  journal Journal               @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  values  TradeAttributeValue[]
 
-  @@map("journal_attributes")
-  @@index([journalId])
   @@unique([journalId, name]) // Prevent duplicate attribute names per journal
+  @@index([journalId])
+  @@map("journal_attributes")
 }
 
 // ============================================================================
@@ -149,23 +150,23 @@ model JournalAttribute {
 // Only one value column should be populated per row (based on JournalAttribute.type)
 
 model TradeAttributeValue {
-  id                String    @id @default(uuid())
-  tradeId           String    @map("trade_id")
+  id                 String   @id @default(uuid())
+  tradeId            String   @map("trade_id")
   journalAttributeId String   @map("journal_attribute_id")
-  valueText         String?   @map("value_text")     // For TEXT type attributes
-  valueNumber       Float?    @map("value_number")   // For NUMBER type attributes
-  valueBoolean      Boolean?  @map("value_boolean")  // For BOOLEAN type attributes
-  valueImageUrl     String?   @map("value_image_url") // For IMAGE type attributes (URL to stored image)
-  createdAt         DateTime  @default(now()) @map("created_at")
+  valueText          String?  @map("value_text") // For TEXT type attributes
+  valueNumber        Float?   @map("value_number") // For NUMBER type attributes
+  valueBoolean       Boolean? @map("value_boolean") // For BOOLEAN type attributes
+  valueImageUrl      String?  @map("value_image_url") // For IMAGE type attributes (URL to stored image)
+  createdAt          DateTime @default(now()) @map("created_at")
 
   // Relations
-  trade             Trade     @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  trade            Trade            @relation(fields: [tradeId], references: [id], onDelete: Cascade)
   journalAttribute JournalAttribute @relation(fields: [journalAttributeId], references: [id], onDelete: Cascade)
 
-  @@map("trade_attribute_values")
+  @@unique([tradeId, journalAttributeId]) // One value per attribute per trade
   @@index([tradeId])
   @@index([journalAttributeId])
-  @@unique([tradeId, journalAttributeId]) // One value per attribute per trade
+  @@map("trade_attribute_values")
 }
 
 // ============================================================================
@@ -173,10 +174,10 @@ model TradeAttributeValue {
 // ============================================================================
 
 enum AttributeType {
-  TEXT    // String values (e.g., "Strategy name", "Notes")
-  NUMBER  // Numeric values (e.g., "Position size", "Entry price")
+  TEXT // String values (e.g., "Strategy name", "Notes")
+  NUMBER // Numeric values (e.g., "Position size", "Entry price")
   BOOLEAN // True/false values (e.g., "Followed plan", "Revenge trade")
-  IMAGE   // Image URLs (e.g., "Screenshot", "Chart")
+  IMAGE // Image URLs (e.g., "Screenshot", "Chart")
 }
 
 // ============================================================================
@@ -207,4 +208,3 @@ enum AttributeType {
 // 6. CAPITAL TRACKING:
 //    - currentCapital in Journal is updated after each trade
 //    - Can be recalculated from trades if needed: startingCapital + SUM(profitLoss)
-

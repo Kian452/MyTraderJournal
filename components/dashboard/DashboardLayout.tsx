@@ -27,10 +27,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <nav className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            {/* Left: App Name */}
-            <div className="flex items-center">
+            {/* Left: App Name and Navigation */}
+            <div className="flex items-center space-x-6">
               <Link href="/dashboard/journals" className="text-xl font-semibold text-white">
                 MyTraderJournal
+              </Link>
+              <Link
+                href="/dashboard/journals"
+                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Journals
               </Link>
             </div>
 
@@ -61,7 +67,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           {session?.user?.email}
                         </div>
                         <button
-                          onClick={() => signOut({ callbackUrl: '/' })}
+                          onClick={() => signOut({ callbackUrl: '/auth/login' })}
                           className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
                         >
                           Sign out

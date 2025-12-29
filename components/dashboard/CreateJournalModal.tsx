@@ -7,6 +7,7 @@ interface CreateJournalModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: { name: string; startingCapital: number; currency: Currency }) => void
+  isSubmitting?: boolean
 }
 
 interface JournalFormData {
@@ -23,6 +24,7 @@ export default function CreateJournalModal({
   isOpen,
   onClose,
   onSubmit,
+  isSubmitting = false,
 }: CreateJournalModalProps) {
   const [formData, setFormData] = useState<JournalFormData>({
     name: '',
@@ -126,7 +128,7 @@ export default function CreateJournalModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validate()) {
+    if (!validate() || isSubmitting) {
       return
     }
 
@@ -137,14 +139,7 @@ export default function CreateJournalModal({
       currency: formData.currency,
     })
 
-    // Reset form and close modal
-    setFormData({
-      name: '',
-      startingCapital: '',
-      currency: 'USD',
-    })
-    setErrors({})
-    onClose()
+    // Don't reset or close here - let parent handle it after async operation
   }
 
   // Reset form when modal opens
@@ -254,6 +249,27 @@ export default function CreateJournalModal({
                 <option value="EUR">EUR</option>
               </select>
             </div>
+
+            {/* Template (Coming Soon) */}
+            <div>
+              <label
+                htmlFor="template"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
+                Use Template <span className="text-xs text-gray-500">(Coming Soon)</span>
+              </label>
+              <select
+                id="template"
+                name="template"
+                disabled
+                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-md text-gray-500 cursor-not-allowed focus:outline-none"
+              >
+                <option value="">None (Start Fresh)</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Template feature will allow you to copy settings from existing journals
+              </p>
+            </div>
           </div>
 
           {/* Actions */}
@@ -267,10 +283,10 @@ export default function CreateJournalModal({
             </button>
             <button
               type="submit"
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || isSubmitting}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create
+              {isSubmitting ? 'Creating...' : 'Create'}
             </button>
           </div>
         </form>

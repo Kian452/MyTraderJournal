@@ -55,11 +55,13 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase().trim(),
+        name: name.trim() || null,
         passwordHash,
       },
       select: {
         id: true,
         email: true,
+        name: true,
         createdAt: true,
       },
     })
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
         user: {
           id: user.id,
           email: user.email,
+          name: user.name,
         }
       },
       { status: 201 }
