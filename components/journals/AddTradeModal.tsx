@@ -374,6 +374,7 @@ export default function AddTradeModal({
       riskAmount: parseFloat(formData.riskAmount),
       mainRR: mainRRValue,
       partials: partialsData,
+      thoughtProcess: formData.thoughtProcess.trim() || null,
     }
 
     // Debug log
