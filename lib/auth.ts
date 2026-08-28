@@ -8,6 +8,12 @@ import bcrypt from 'bcryptjs'
  * Uses database for user authentication
  */
 
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error(
+    'NEXTAUTH_SECRET is not set. Generate one with `openssl rand -base64 32` and add it to your .env file.'
+  )
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -83,6 +89,6 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || 'your-secret-key-change-in-production',
+  secret: process.env.NEXTAUTH_SECRET,
 }
 

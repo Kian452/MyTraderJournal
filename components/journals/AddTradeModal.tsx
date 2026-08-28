@@ -161,10 +161,13 @@ export default function AddTradeModal({
       }))
     }
 
-    // If outcome changes to non-WIN, hide partials
+    // If outcome changes to non-WIN, hide partials and clear mainRR
+    // (it's not shown/used for non-WIN trades, and a leftover value
+    // from a prior WIN entry shouldn't be submitted with the trade)
     if (name === 'outcome' && value !== 'WIN') {
       setShowPartials(false)
       setPartials([])
+      setFormData((prev) => ({ ...prev, mainRR: '' }))
     }
   }
 
@@ -366,7 +369,9 @@ export default function AddTradeModal({
         ? parseFloat(formData.mainRR)
         : totalFraction === 1.0
         ? null
-        : parseFloat(formData.mainRR)
+        : formData.mainRR.trim()
+        ? parseFloat(formData.mainRR)
+        : null
 
     const tradeData = {
       tradeDate: new Date(formData.tradeDate),

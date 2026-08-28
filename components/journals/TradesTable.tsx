@@ -31,10 +31,14 @@ export default function TradesTable({
   }
 
   const formatDate = (date: Date | string) => {
+    // Trade dates are stored as UTC midnight; format in UTC so the
+    // displayed day matches what was entered regardless of the
+    // viewer's local timezone.
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      timeZone: 'UTC',
     }).format(new Date(date))
   }
 

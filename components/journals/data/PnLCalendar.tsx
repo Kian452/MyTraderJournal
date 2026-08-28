@@ -58,7 +58,10 @@ export default function PnLCalendar({ trades, currency }: PnLCalendarProps) {
     // Add days of the month
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day)
-      const dateStr = date.toISOString().split('T')[0]
+      // Build the key directly from the calendar's own year/month/day
+      // instead of going through toISOString() (UTC), which shifts the
+      // date by a day for timezones ahead of UTC.
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       const pnl = dailyPnLMap.get(dateStr) || null
       days.push({ day, date, pnl })
     }
